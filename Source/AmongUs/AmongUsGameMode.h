@@ -10,17 +10,36 @@ class AMONGUS_API AAmongUsGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	// === Constructeur ===
 	AAmongUsGameMode();
-	void CheckWinCondition();
+
+	// === Accès public ===
+	void CheckWinCondition(); // <-- déplacé ici
+
 protected:
+	// === Surcharges ===
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	// === Fonctions principales ===
+	void ChangeMap();
+	void AssignRolesOnLevel();
+	void SpawnButtons();
+	void ReturnToLobby();
 
 private:
 	bool bHasMapChanged;
 
-	void ChangeMap();
-	void AssignRolesOnLevel();
-	void SpawnButtons();
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	int32 NumPlayersExpected = 2;
 
-	int32 NumPlayersExpected = 4; // Nombre total de joueurs attendu pour démarrer le level
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	float GameDuration = 120.0f;
+
+	FTimerHandle GameTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	float LobbyCountdownDuration = 30.0f;
+
+	FTimerHandle LobbyCountdownTickHandle;
+	FTimerHandle GameCountdownTickHandle;
 };

@@ -24,6 +24,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
+	UFUNCTION(BlueprintCallable)
+	void TogglePauseMenu();
+	
 	/** Input Mapping Contexts (excluded on mobile) */
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
 	TArray<UInputMappingContext*> MobileExcludedMappingContexts;

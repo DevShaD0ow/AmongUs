@@ -7,12 +7,11 @@
 #include "Logging/LogMacros.h"
 #include "AmongUsCharacter.generated.h"
 
-
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
-class ABouton; // ajout pour connaître ABouton
+class ABouton; // pour interaction avec les boutons
 
 DECLARE_LOG_CATEGORY_EXTERN(LogAmongUsCharacter, Log, All);
 
@@ -25,6 +24,15 @@ class AMONGUS_API AAmongUsCharacter : public ACharacter
 {
     GENERATED_BODY()
 
+public:
+    /** Constructor */
+    AAmongUsCharacter();
+
+protected:
+    // ==========================
+    // Components
+    // ==========================
+    
     /** Camera boom positioning the camera behind the character */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* CameraBoom;
@@ -33,8 +41,10 @@ class AMONGUS_API AAmongUsCharacter : public ACharacter
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FollowCamera;
 
-protected:
-
+    // ==========================
+    // Input Actions
+    // ==========================
+    
     /** Jump Input Action */
     UPROPERTY(EditAnywhere, Category="Input")
     UInputAction* JumpAction;
@@ -51,17 +61,12 @@ protected:
     UPROPERTY(EditAnywhere, Category="Input")
     UInputAction* MouseLookAction;
 
-public:
-
-    /** Constructor */
-    AAmongUsCharacter();
-
-protected:
+    // ==========================
+    // Protected Functions
+    // ==========================
 
     /** Initialize input action bindings */
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-protected:
 
     /** Called for movement input */
     void Move(const FInputActionValue& Value);
@@ -70,6 +75,9 @@ protected:
     void Look(const FInputActionValue& Value);
 
 public:
+    // ==========================
+    // Public Functions
+    // ==========================
 
     /** Handles move inputs from either controls or UI interfaces */
     UFUNCTION(BlueprintCallable, Category="Input")
@@ -83,14 +91,13 @@ public:
     UFUNCTION(BlueprintCallable, Category="Input")
     virtual void DoJumpStart();
 
-    /** Handles jump pressed inputs from either controls or UI interfaces */
+    /** Handles jump release inputs from either controls or UI interfaces */
     UFUNCTION(BlueprintCallable, Category="Input")
     virtual void DoJumpEnd();
 
-public:
-
-    /** Returns CameraBoom subobject **/
-    FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+    /** Change la couleur du joueur */
+    UFUNCTION(BlueprintCallable)
+    void ChangeColor(const FLinearColor& NewColor);
 
     /** Interaction avec un bouton, RPC côté serveur */
     UFUNCTION(Server, Reliable)
@@ -99,7 +106,21 @@ public:
     /** Tente d’interagir avec un bouton proche (appelé côté client) */
     void TryInteract();
 
+    // ==========================
+    // Properties
+    // ==========================
+
+    UPROPERTY()
+    UMaterialInstanceDynamic* DynamicMaterial;
+
     /** Distance max pour interagir */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
     float InteractionDistance = 200.f; 
+
+    // ==========================
+    // Inline Functions
+    // ==========================
+
+    /** Returns CameraBoom subobject */
+    FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 };

@@ -146,3 +146,18 @@ void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)
 	}
 }
 
+
+void AAmongUsCharacter::ChangeColor(const FLinearColor& NewColor)
+{
+	if (!GetMesh()) return;
+
+	// Crée une instance dynamique du matériau à l’index 0 si ce n’est pas déjà fait
+	if (!DynamicMaterial)
+	{
+		DynamicMaterial = UMaterialInstanceDynamic::Create(GetMesh()->GetMaterial(0), this);
+		GetMesh()->SetMaterial(0, DynamicMaterial);
+	}
+
+	DynamicMaterial->SetVectorParameterValue("BodyColor", NewColor);
+}
+

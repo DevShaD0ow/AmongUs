@@ -43,7 +43,7 @@ void AAmongUsPlayerController::SetupInputComponent()
 	{
 		// Bind brut de la touche E
 		InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AAmongUsPlayerController::OnInteractPressed);
-
+		InputComponent->BindAction("PauseMenu", IE_Pressed, this, &AAmongUsPlayerController::TogglePauseMenu);
 		// Ajouter tes Input Mapping Contexts existants
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
@@ -68,7 +68,20 @@ void AAmongUsPlayerController::OnInteractPressed()
 	if (MyPawn)
 	{
 		MyPawn->TryInteract();
-		UE_LOG(LogTemp, Warning, TEXT("E pressed: interaction triggered"));
+	}
+}
+
+void AAmongUsPlayerController::TogglePauseMenu()
+{
+	if (IsPaused())
+	{
+		SetPause(false);
+		UE_LOG(LogTemp, Warning, TEXT("Jeu repris"));
+	}
+	else
+	{
+		SetPause(true);
+		UE_LOG(LogTemp, Warning, TEXT("Jeu en pause"));
 	}
 }
 

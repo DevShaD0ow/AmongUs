@@ -39,5 +39,5 @@ public:
 	void IncrementTaskServerOnly(AAmongUsPlayerState* PlayerState);
 
 	// Fonction réelle d’interaction
-	void Interact(AAmongUsPlayerState* PlayerState);
+	virtual void Interact(AAmongUsPlayerState* PlayerState);
 };

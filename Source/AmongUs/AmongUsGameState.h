@@ -15,18 +15,33 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(ReplicatedUsing=OnRep_Nbtache, BlueprintReadWrite)
+	/** Nombre de tâches restantes */
+	UPROPERTY(Replicated, BlueprintReadWrite)
 	int32 nbTache;
 
+	/** Rôles déjà assignés */
 	UPROPERTY()
 	bool bRolesAssigned;
 
+	/** Compteurs répliqués */
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 LobbyCountdown;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 GameCountdown;
+
+	/** Handles internes de timers */
+	FTimerHandle LobbyCountdownTimer;
+	FTimerHandle GameCountdownTimer;
+
+	/** Mise à jour côté serveur */
+	void UpdateLobbyCountdown();
+	void UpdateGameCountdown();
+	
+	/** Interaction joueur */
 	UFUNCTION(Server, Reliable)
 	void ServerModifyNbtache(AAmongUsPlayerState* PlayerState);
-	void ServerModifyNbtache_Implementation(AAmongUsPlayerState* PlayerState);
 
-	UFUNCTION()
-	void OnRep_Nbtache();
-
+	/** Réplication */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

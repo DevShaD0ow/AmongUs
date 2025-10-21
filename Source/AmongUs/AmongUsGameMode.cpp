@@ -14,11 +14,15 @@ AAmongUsGameMode::AAmongUsGameMode()
     PlayerStateClass = AAmongUsPlayerState::StaticClass();
     DefaultPawnClass = AAmongUsCharacter::StaticClass();
     PlayerControllerClass = AAmongUsPlayerController::StaticClass();
+
+    // === AJOUT ===
+    GameDuration = 120.0f; // 2 minutes de jeu
 }
 
 void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
+    UE_LOG(LogTemp, Warning, TEXT("PostLogin appelé pour %s"), *NewPlayer->GetName());
 
     UWorld* World = GetWorld();
     if (!World) return;
@@ -29,18 +33,36 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
     if (CurrentMapName.EndsWith("Lobby"))
     {
         AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
-        if (!GS) return;
+        if (!GS)return;
 
         int32 PlayerCount = GS->PlayerArray.Num();
         UE_LOG(LogTemp, Warning, TEXT("Nombre de joueurs connectés : %d"), PlayerCount);
 
+        // Quand assez de joueurs, démarrer le compte à rebours
         if (!bHasMapChanged && PlayerCount >= NumPlayersExpected)
         {
             bHasMapChanged = true;
-            UE_LOG(LogTemp, Warning, TEXT("Nombre requis de joueurs atteint ! La map changera dans 3 secondes"));
+            GS->LobbyCountdown = static_cast<int32>(LobbyCountdownDuration);
+            UE_LOG(LogTemp, Warning, TEXT("Début du compte à rebours du lobby (%d secondes)"), GS->LobbyCountdown);
 
-            FTimerHandle TimerHandle;
-            GetWorldTimerManager().SetTimer(TimerHandle, this, &AAmongUsGameMode::ChangeMap, 3.0f, false);
+            // Timer pour décrémenter le compte à rebours chaque seconde
+            GetWorldTimerManager().SetTimer(
+                LobbyCountdownTickHandle,
+                [this, GS]()
+                {
+                    if (GS)
+                    {
+                        GS->UpdateLobbyCountdown();
+
+                        if (GS->LobbyCountdown <= 0)
+                        {
+                            GetWorldTimerManager().ClearTimer(LobbyCountdownTickHandle);
+                            UE_LOG(LogTemp, Warning, TEXT("Fin du compte à rebours du lobby — changement de map"));
+                            ChangeMap();
+                        }
+                    }
+                },
+                1.0f, true);
         }
     }
 
@@ -66,6 +88,28 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
             GS->bRolesAssigned = true;
 
             SpawnButtons();
+
+            // === Compte à rebours partie (2 minutes) ===
+            GS->GameCountdown = static_cast<int32>(GameDuration);
+            UE_LOG(LogTemp, Warning, TEXT("Début du compte à rebours de partie (%d secondes)"), GS->GameCountdown);
+
+            GetWorldTimerManager().SetTimer(
+                GameCountdownTickHandle,
+                [this, GS]()
+                {
+                    if (GS)
+                    {
+                        GS->UpdateGameCountdown();
+
+                        if (GS->GameCountdown <= 0)
+                        {
+                            GetWorldTimerManager().ClearTimer(GameCountdownTickHandle);
+                            UE_LOG(LogTemp, Warning, TEXT("Fin du compte à rebours de partie — retour au lobby"));
+                            ReturnToLobby();
+                        }
+                    }
+                },
+                1.0f, true);
         }
     }
 }
@@ -128,7 +172,6 @@ void AAmongUsGameMode::AssignRolesOnLevel()
     }
 }
 
-
 void AAmongUsGameMode::SpawnButtons()
 {
     UWorld* World = GetWorld();
@@ -154,7 +197,19 @@ void AAmongUsGameMode::SpawnButtons()
     }
 }
 
-// Dans ton GameMode
+// === AJOUT : Retour automatique au lobby après la durée ===
+void AAmongUsGameMode::ReturnToLobby()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Fin du timer de partie → retour au lobby"));
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        FString LobbyPath = "/Game/Maps/Lobby";
+        World->ServerTravel(LobbyPath + "?listen");
+    }
+}
+
+// === Déjà présent ===
 void AAmongUsGameMode::CheckWinCondition()
 {
     AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
@@ -164,14 +219,12 @@ void AAmongUsGameMode::CheckWinCondition()
     {
         UE_LOG(LogTemp, Warning, TEXT("Toutes les tâches terminées → WIN ! Retour au lobby"));
 
-        // ServerTravel vers le Lobby pour tout le monde
         UWorld* World = GetWorld();
         if (World)
         {
+            GetWorldTimerManager().ClearTimer(GameCountdownTickHandle);
             FString LobbyPath = "/Game/Maps/Lobby";
             World->ServerTravel(LobbyPath + "?listen");
         }
     }
 }
-
-

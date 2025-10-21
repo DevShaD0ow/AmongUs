@@ -12,7 +12,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="" />
+    <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/ColorsButton.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/ColorsButton.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Maps/Lobby.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Lobby.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/WBP_Role.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/WBP_Role.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,11 +39,31 @@
   <component name="DpaMonitoringSettings">
     <option name="firstShow" value="false" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;DevShaD0ow&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/DevShaD0ow/AmongUs.git&quot;,
+    &quot;accountId&quot;: &quot;110d1340-100d-45e2-8c97-8d2cd63782fe&quot;
+  }
+}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/colorsButton.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/colorsButton.h" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -41,6 +79,8 @@
     &quot;C/C++ Project.AmongUs.executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -175,6 +215,9 @@
       <workItem from="1760072419232" duration="370000" />
       <workItem from="1760072851333" duration="468000" />
       <workItem from="1760073375531" duration="1758000" />
+      <workItem from="1760935041203" duration="3129000" />
+      <workItem from="1760994321145" duration="218000" />
+      <workItem from="1760998468128" duration="6978000" />
     </task>
     <servers />
   </component>
