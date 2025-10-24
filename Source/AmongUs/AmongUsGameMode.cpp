@@ -20,91 +20,58 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	UWorld* World = GetWorld();
-	if (!World) return;
+	AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(NewPlayer);
+	if (!PC) return;
 
-	FString CurrentMapName = World->GetMapName();
 	AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
 	if (!GS) return;
 
 	int32 PlayerCount = GS->PlayerArray.Num();
-	UE_LOG(LogTemp, Warning, TEXT("PostLogin appelé pour %s, PlayerCount=%d, Map=%s"), 
-		*NewPlayer->GetName(), PlayerCount, *CurrentMapName);
 
-	// === LOBBY ===
-	if (CurrentMapName.EndsWith("Lobby"))
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	if (World->GetMapName().EndsWith("Lobby"))
 	{
-		if (!bHasMapChanged && PlayerCount >= NumPlayersExpected)
+		// Lancer le timer seulement si au moins 2 joueurs et pas déjà actif
+		if (PlayerCount >= 2 && !GetWorldTimerManager().IsTimerActive(GS->LobbyTimerHandle) && HasAuthority())
 		{
-			bHasMapChanged = true;
-			if (HasAuthority())
-			{
-				GS->LobbyCountdown = static_cast<int32>(LobbyCountdownDuration);
-				UE_LOG(LogTemp, Warning, TEXT("Début countdown lobby : %d secondes"), GS->LobbyCountdown);
-
-				GetWorldTimerManager().SetTimer(
-					LobbyCountdownTickHandle,
-					[this, GS]()
-					{
-						if (GS)
-						{
-							GS->UpdateLobbyCountdown();
-							UE_LOG(LogTemp, Warning, TEXT("LobbyCountdown = %d"), GS->LobbyCountdown);
-
-							if (GS->LobbyCountdown <= 0)
-							{
-								GetWorldTimerManager().ClearTimer(LobbyCountdownTickHandle);
-								UE_LOG(LogTemp, Warning, TEXT("Lobby terminé → changement de map"));
-								ChangeMap();
-							}
-						}
-					},
-					1.0f, true
-				);
-			}
-		}
-	}
-
-	// === LEVEL ===
-	else if (CurrentMapName.EndsWith("Level"))
-	{
-		if (!HasAuthority()) return;
-
-		if (!GS->bRolesAssigned && PlayerCount >= NumPlayersExpected)
-		{
-			GS->nbTache = FMath::RandRange(5, 10);
-			UE_LOG(LogTemp, Warning, TEXT("Nombre de tâches généré : %d"), GS->nbTache);
-
-			AssignRolesOnLevel();
-			GS->bRolesAssigned = true;
-
-			SpawnButtons();
-
-			GS->GameCountdown = static_cast<int32>(GameDuration);
-			UE_LOG(LogTemp, Warning, TEXT("Début countdown partie : %d secondes"), GS->GameCountdown);
+			GS->LobbyCountdown = static_cast<int32>(LobbyCountdownDuration);
 
 			GetWorldTimerManager().SetTimer(
-				GameCountdownTickHandle,
-				[this, GS]()
-				{
-					if (GS)
-					{
-						GS->UpdateGameCountdown();
-						UE_LOG(LogTemp, Warning, TEXT("GameCountdown = %d"), GS->GameCountdown);
-
-						if (GS->GameCountdown <= 0)
-						{
-							GetWorldTimerManager().ClearTimer(GameCountdownTickHandle);
-							UE_LOG(LogTemp, Warning, TEXT("Fin de partie → retour au lobby"));
-							ReturnToLobby();
-						}
-					}
-				},
-				1.0f, true
+				GS->LobbyTimerHandle,
+				GS,
+				&AAmongUsGameState::LobbyCountdownTick,
+				1.0f,
+				true
 			);
-		}
+
+			UE_LOG(LogTemp, Warning, TEXT("LobbyCountdown lancé avec %d joueurs !"), PlayerCount);
+		}else GS->LobbyCountdown = 0;
+	}
+	else if (World->GetMapName().EndsWith("Level"))
+	{
+		if (!HasAuthority() || GS->bRolesAssigned) return;
+
+		GS->nbTache = FMath::RandRange(5, 10);
+		GS->bRolesAssigned = true;
+
+		FTimerHandle RoleAssignTimerHandle;
+		GetWorldTimerManager().SetTimer(
+			RoleAssignTimerHandle,
+			[this]()
+			{
+				AssignRolesOnLevel();
+				SpawnButtons();
+			},
+			0.5f,
+			false
+		);
+
+		GS->GameCountdown = static_cast<int32>(GameDuration);
 	}
 }
+
 
 void AAmongUsGameMode::ChangeMap()
 {
@@ -114,7 +81,6 @@ void AAmongUsGameMode::ChangeMap()
 	if (World->GetNetMode() == NM_ListenServer || World->GetNetMode() == NM_DedicatedServer)
 	{
 		FString MapPath = "/Game/Maps/Level?listen";
-		UE_LOG(LogTemp, Warning, TEXT("ServerTravel vers %s"), *MapPath);
 		World->ServerTravel(MapPath);
 	}
 }
@@ -125,31 +91,59 @@ void AAmongUsGameMode::AssignRolesOnLevel()
 	if (!GS) return;
 
 	TArray<AAmongUsPlayerState*> Players;
+
+	// Récupérer tous les PlayerState du GameState
 	for (APlayerState* PS : GS->PlayerArray)
 	{
 		AAmongUsPlayerState* MyPS = Cast<AAmongUsPlayerState>(PS);
-		if (MyPS) Players.Add(MyPS);
+		if (MyPS)
+			Players.Add(MyPS);
 	}
 
 	if (Players.Num() == 0) return;
 
-	// Mélanger la liste
+	// --- Affichage de la liste des joueurs avant attribution ---
+	UE_LOG(LogTemp, Warning, TEXT("Liste des joueurs avant attribution des rôles :"));
 	for (int32 i = 0; i < Players.Num(); i++)
 	{
-		int32 SwapIndex = FMath::RandRange(0, Players.Num() - 1);
+		UE_LOG(LogTemp, Warning, TEXT("PlayerNum %d : %s"), i, *Players[i]->GetPlayerName());
+	}
+
+	// Initialiser le random (optionnel mais plus sûr)
+	FMath::RandInit(FDateTime::Now().GetMillisecond());
+
+	// --- Fisher-Yates shuffle pour un vrai mélange ---
+	for (int32 i = Players.Num() - 1; i > 0; i--)
+	{
+		int32 SwapIndex = FMath::RandRange(0, i);
 		Players.Swap(i, SwapIndex);
 	}
 
+	// Déterminer le nombre d'imposteurs
 	int32 NumImpostors = (Players.Num() > 6) ? 2 : 1;
-	for (int32 i = 0; i < NumImpostors; i++) Players[i]->SetPlayerRole(EPlayerRole::Mechant);
-	for (int32 i = NumImpostors; i < Players.Num(); i++) Players[i]->SetPlayerRole(EPlayerRole::Gentil);
 
-	for (AAmongUsPlayerState* PS : Players)
+	// Assigner les imposteurs
+	for (int32 i = 0; i < NumImpostors; i++)
 	{
-		const TCHAR* RoleText = (PS->GetPlayerRole() == EPlayerRole::Gentil) ? TEXT("Gentil") : TEXT("Mechant");
-		UE_LOG(LogTemp, Warning, TEXT("Joueur %s est %s"), *PS->GetPlayerName(), RoleText);
+		Players[i]->SetPlayerRole(EPlayerRole::Mechant);
+	}
+
+	// Assigner le reste comme Gentil
+	for (int32 i = NumImpostors; i < Players.Num(); i++)
+	{
+		Players[i]->SetPlayerRole(EPlayerRole::Gentil);
+	}
+
+	// --- Log des rôles après attribution ---
+	UE_LOG(LogTemp, Warning, TEXT("Rôles attribués :"));
+	for (int32 i = 0; i < Players.Num(); i++)
+	{
+		const TCHAR* RoleText = (Players[i]->GetPlayerRole() == EPlayerRole::Gentil) ? TEXT("Gentil") :
+								TEXT("Mechant");
+		UE_LOG(LogTemp, Warning, TEXT("PlayerNum %d : Joueur %s est %s"), i, *Players[i]->GetPlayerName(), RoleText);
 	}
 }
+
 
 void AAmongUsGameMode::SpawnButtons()
 {
@@ -162,25 +156,18 @@ void AAmongUsGameMode::SpawnButtons()
 	for (int32 i = 0; i < GS->nbTache; i++)
 	{
 		FVector SpawnLocation(FMath::FRandRange(-500.f, 500.f), FMath::FRandRange(-500.f, 500.f), 200.f);
-		FRotator SpawnRotation = FRotator::ZeroRotator;
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		World->SpawnActor<ABouton>(ABouton::StaticClass(), SpawnLocation, SpawnRotation, SpawnParams);
+		FRotator SpawnRotation(0.f, 0.f, 0.f);
+		World->SpawnActor<ABouton>(ABouton::StaticClass(), SpawnLocation, SpawnRotation);
 	}
 }
 
 void AAmongUsGameMode::ReturnToLobby()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Retour au lobby"));
 	UWorld* World = GetWorld();
-	if (World)
-	{
-		FString LobbyPath = "/Game/Maps/Lobby?listen";
-		World->ServerTravel(LobbyPath);
-	}
+	if (!World) return;
+
+	FString MapPath = "/Game/Maps/Lobby?listen";
+	World->ServerTravel(MapPath);
 }
 
 void AAmongUsGameMode::CheckWinCondition()
@@ -191,7 +178,7 @@ void AAmongUsGameMode::CheckWinCondition()
 	if (GS->nbTache <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Toutes les tâches terminées → WIN ! Retour au lobby"));
-		GetWorldTimerManager().ClearTimer(GameCountdownTickHandle);
+		GS->StopGameCountdownTimer();
 		ReturnToLobby();
 	}
 }

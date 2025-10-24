@@ -1,48 +1,67 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "AmongUsPlayerController.generated.h"
 
-class UInputMappingContext;
-class UUserWidget;
-
-/**
- *  Basic PlayerController class for a third person game
- *  Manages input mappings
- */
 UCLASS()
-class AAmongUsPlayerController : public APlayerController
+class AMONGUS_API AAmongUsPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
-protected:
 
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> DefaultMappingContexts;
+public:
+	AAmongUsPlayerController();
 
-	UFUNCTION(BlueprintCallable)
-	void QuitGameClient();
+	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+	virtual void PostNetInit() override;
+	UFUNCTION(BlueprintPure, Category="Network Clock")
+	float GetServerWorldTimeDelta() const;
 
-	/** Input Mapping Contexts (excluded on mobile) */
-	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
-	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
+	UFUNCTION(BlueprintPure, Category="Network Clock")
+	float GetServerWorldTime() const;
 
-	// Classe du menu pause
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	// === Quit Menu ===
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="UI")
 	TSubclassOf<UUserWidget> QuitMenuWidgetClass;
 
-	// Instance du menu
-	UUserWidget* QuitMenuWidgetInstance;
+	UPROPERTY()
+	class UUserWidget* QuitMenuWidgetInstance;
 
+	UPROPERTY()
+	TObjectPtr<UUserWidget> QuitMenuWidget;
 
-	/** Gameplay initialization */
-	virtual void BeginPlay() override;
+	UFUNCTION()
+	void QuitGameClient();
 
-	/** Input mapping context setup */
-	virtual void SetupInputComponent() override;
 	void OnInteractPressed();
+	void ToggleQuitMenu();
+
+protected:
+	// === Input Mapping ===
+	UPROPERTY(EditAnywhere, Category="Input")
+	TArray<class UInputMappingContext*> DefaultMappingContexts;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TArray<class UInputMappingContext*> MobileExcludedMappingContexts;
+
+	// === Network Synced Clock ===
+	UPROPERTY(EditDefaultsOnly, Category="Network Clock")
+	float NetworkClockUpdateFrequency = 1.0f; // toutes les secondes
+
+private:
+	float ServerWorldTimeDelta = 0.f;
+	TArray<float> RTTCircularBuffer;
+
+	FTimerHandle ClientTimerHandle;
+
+	void RequestWorldTime_Internal();
+	void UpdateClientCountdowns();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerRequestWorldTime(float ClientTimestamp);
+
+	UFUNCTION(Client, Unreliable)
+	void ClientUpdateWorldTime(float ClientTimestamp, float ServerTimestamp);
+	
 };

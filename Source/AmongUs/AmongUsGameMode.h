@@ -14,15 +14,14 @@ public:
 
 	// Vérifie si toutes les tâches sont faites
 	void CheckWinCondition();
-
+	void ChangeMap();
+	void ReturnToLobby();
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	// Fonctions principales
-	void ChangeMap();
 	void AssignRolesOnLevel();
 	void SpawnButtons();
-	void ReturnToLobby();
 
 private:
 	bool bHasMapChanged;
