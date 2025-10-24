@@ -25,19 +25,19 @@ protected:
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
 	UFUNCTION(BlueprintCallable)
-	void TogglePauseMenu();
-	
+	void QuitGameClient();
+
 	/** Input Mapping Contexts (excluded on mobile) */
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
 	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
 
-	/** Mobile controls widget to spawn */
-	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
-	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
+	// Classe du menu pause
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI")
+	TSubclassOf<UUserWidget> QuitMenuWidgetClass;
 
-	/** Pointer to the mobile controls widget */
-	UPROPERTY()
-	TObjectPtr<UUserWidget> MobileControlsWidget;
+	// Instance du menu
+	UUserWidget* QuitMenuWidgetInstance;
+
 
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;

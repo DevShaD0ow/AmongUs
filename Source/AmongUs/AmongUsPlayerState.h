@@ -27,10 +27,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
 	EPlayerRole PlayerRole;
 
-	// Couleur du joueur
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, BlueprintReadOnly, Category = "Appearance")
-	FLinearColor PlayerColor;
-
 public:
 	// Getters et setters pour le rôle
 	UFUNCTION(BlueprintCallable, Category = "Role")
@@ -43,12 +39,5 @@ public:
 	UFUNCTION()
 	void OnRep_PlayerRole();
 
-	UFUNCTION()
-	void OnRep_PlayerColor();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	// Fonction serveur pour changer la couleur du joueur
-	UFUNCTION(Server, Reliable)
-	void ServerSetPlayerColor(const FLinearColor& NewColor);
 };

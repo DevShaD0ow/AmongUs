@@ -95,10 +95,6 @@ public:
     UFUNCTION(BlueprintCallable, Category="Input")
     virtual void DoJumpEnd();
 
-    /** Change la couleur du joueur */
-    UFUNCTION(BlueprintCallable)
-    void ChangeColor(const FLinearColor& NewColor);
-
     /** Interaction avec un bouton, RPC côté serveur */
     UFUNCTION(Server, Reliable)
     void ServerInteractWithButton(ABouton* Btn);

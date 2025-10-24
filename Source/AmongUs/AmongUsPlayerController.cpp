@@ -1,38 +1,57 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
-
 #include "AmongUsPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "InputCoreTypes.h"
 #include "Blueprint/UserWidget.h"
-#include "AmongUs.h"
 #include "AmongUsCharacter.h"
+#include "Components/Button.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 void AAmongUsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// only spawn touch controls on local player controllers
-	if (SVirtualJoystick::ShouldDisplayTouchInterface() && IsLocalPlayerController())
+	UE_LOG(LogTemp, Warning, TEXT("BeginPlay PlayerController"));
+
+	if (QuitMenuWidgetClass)
 	{
-		// spawn the mobile controls widget
-		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);
-
-		if (MobileControlsWidget)
+		QuitMenuWidgetInstance = CreateWidget<UUserWidget>(this, QuitMenuWidgetClass);
+		if (!QuitMenuWidgetInstance)
 		{
-			// add the controls to the player screen
-			MobileControlsWidget->AddToPlayerScreen(0);
-
-		} else {
-
-			UE_LOG(LogAmongUs, Error, TEXT("Could not spawn mobile controls widget."));
-
+			UE_LOG(LogTemp, Error, TEXT("Impossible de créer le widget QuitMenuWidget"));
+			return;
 		}
 
+		UE_LOG(LogTemp, Warning, TEXT("Widget QuitMenuWidget créé"));
+
+		if (UButton* QuitButton = Cast<UButton>(QuitMenuWidgetInstance->GetWidgetFromName(TEXT("QuitButton"))))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("QuitButton trouvé, binding OnClicked"));
+			QuitButton->OnClicked.AddDynamic(this, &AAmongUsPlayerController::QuitGameClient);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("QuitButton non trouvé dans le widget ! Vérifie le nom dans le Blueprint"));
+		}
+
+		// Affiche le menu pour tester
+		QuitMenuWidgetInstance->AddToViewport();
+		UE_LOG(LogTemp, Warning, TEXT("Widget ajouté à la viewport"));
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("QuitMenuWidgetClass non défini dans le PlayerController"));
+	}
+}
+
+void AAmongUsPlayerController::QuitGameClient()
+{
+	UE_LOG(LogTemp, Warning, TEXT("QuitGameClient appelé"));
+
+	// Ferme le jeu côté client
+	UKismetSystemLibrary::QuitGame(this, this, EQuitPreference::Quit, true);
 }
 
 void AAmongUsPlayerController::SetupInputComponent()
@@ -41,10 +60,8 @@ void AAmongUsPlayerController::SetupInputComponent()
 
 	if (IsLocalPlayerController())
 	{
-		// Bind brut de la touche E
 		InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AAmongUsPlayerController::OnInteractPressed);
-		InputComponent->BindAction("PauseMenu", IE_Pressed, this, &AAmongUsPlayerController::TogglePauseMenu);
-		// Ajouter tes Input Mapping Contexts existants
+
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
 			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
@@ -64,24 +81,8 @@ void AAmongUsPlayerController::SetupInputComponent()
 
 void AAmongUsPlayerController::OnInteractPressed()
 {
-	AAmongUsCharacter* MyPawn = Cast<AAmongUsCharacter>(GetPawn());
-	if (MyPawn)
+	if (AAmongUsCharacter* MyPawn = Cast<AAmongUsCharacter>(GetPawn()))
 	{
 		MyPawn->TryInteract();
 	}
 }
-
-void AAmongUsPlayerController::TogglePauseMenu()
-{
-	if (IsPaused())
-	{
-		SetPause(false);
-		UE_LOG(LogTemp, Warning, TEXT("Jeu repris"));
-	}
-	else
-	{
-		SetPause(true);
-		UE_LOG(LogTemp, Warning, TEXT("Jeu en pause"));
-	}
-}
-
