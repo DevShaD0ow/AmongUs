@@ -1,37 +1,32 @@
 #include "RewindableComponent.h"
+#include "RewindSubsystem.h"
 #include "Engine/World.h"
-#include "AmongUs/RewindSubsystem.h" 
 
 URewindableComponent::URewindableComponent()
 {
-	// 2.a. Taille par défaut pour correspondre au Character (si 42/96)
-	SetCapsuleRadius(42.f); 
-	SetCapsuleHalfHeight(96.0f);
-
-	// 2.b. Rendre la capsule visible in-game
+	// Visible en jeu
 	SetHiddenInGame(false);
-	
-	// Utilisation d'un profil de collision adapté
-	SetCollisionProfileName(TEXT("Pawn"));
-	SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	// Collision pour être détecté par les traces
+	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SetCollisionObjectType(ECC_Pawn);
+	SetCollisionResponseToAllChannels(ECR_Ignore);
+	SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 }
 
 void URewindableComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 4. Enregistrement auprès du subsystème (uniquement sur le serveur)
-	AActor* Owner = GetOwner();
-    
-	// Vérifiez si l'Owner existe et si c'est l'autorité sur le réseau
-	if (Owner && Owner->HasAuthority())
-	{
-		RewindSubsystem = GetWorld()->GetSubsystem<URewindSubsystem>();
+	// Uniquement sur serveur !
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
-		if (RewindSubsystem)
+	if (UWorld* World = GetWorld())
+	{
+		if (URewindSubsystem* Subsystem = World->GetSubsystem<URewindSubsystem>())
 		{
-			RewindSubsystem->RegisterRewindableComponent(this);
-			UE_LOG(LogTemp, Warning, TEXT("URewindableComponent enregistré sur le serveur."));
+			Subsystem->RegisterRewindableComponent(this);
 		}
 	}
 }
