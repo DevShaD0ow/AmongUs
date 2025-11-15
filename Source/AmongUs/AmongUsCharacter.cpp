@@ -9,6 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AmongUs/RewindSubsystem.h"
 #include "InputActionValue.h"
 #include "AmongUs.h"
 #include "Bouton.h"
@@ -32,6 +33,14 @@ AAmongUsCharacter::AAmongUsCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+
+	// ** Ajout du Rewindable Component **
+	RewindCapsule = CreateDefaultSubobject<URewindableComponent>(TEXT("RewindCapsule"));
+	// Attacher au RootComponent (CapsuleComponent du Character)
+	RewindCapsule->SetupAttachment(GetCapsuleComponent()); 
+	// S'assurer qu'il a la même taille que la capsule principale
+	RewindCapsule->SetCapsuleRadius(GetCapsuleComponent()->GetScaledCapsuleRadius());
+	RewindCapsule->SetCapsuleHalfHeight(GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
 	// Camera boom
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -57,6 +66,11 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Move);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
+		//Firing
+		if (FireAction)
+		{
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AAmongUsCharacter::Fire);
+		}
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
@@ -99,6 +113,69 @@ void AAmongUsCharacter::DoLook(float Yaw, float Pitch)
 	{
 		AddControllerYawInput(Yaw);
 		AddControllerPitchInput(Pitch);
+	}
+}
+
+void AAmongUsCharacter::Fire()
+{
+	UWorld* World = GetWorld();
+	if (!World || !IsLocallyControlled()) return;
+
+	// Utiliser la caméra comme point de départ pour le line trace
+	FVector StartLocation = FollowCamera->GetComponentLocation();
+	FRotator CameraRotation = FollowCamera->GetComponentRotation();
+	FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f); 
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this); 
+
+	bool bHit = World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, Params);
+
+	AAmongUsPlayerState* TargetPS = nullptr;
+	if (bHit)
+	{
+		if (AAmongUsCharacter* HitCharacter = Cast<AAmongUsCharacter>(HitResult.GetActor()))
+		{
+			TargetPS = HitCharacter->GetPlayerState<AAmongUsPlayerState>();
+		}
+	}
+	
+	// 7. Envoi de la RPC au serveur
+	if (TargetPS)
+	{
+		float ClientTimestamp = World->GetTimeSeconds();
+		ServerConfirmHit(ClientTimestamp, StartLocation, CameraRotation, TargetPS);
+		UE_LOG(LogTemp, Warning, TEXT("Client Fire: Hit %s, Sending RPC @ %.3f"), *TargetPS->GetPlayerName(), ClientTimestamp);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client Fire: Missed."));
+	}
+}
+
+void AAmongUsCharacter::ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// 8. Demander au RewindSubsystem de vérifier le tir
+	if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
+	{
+		// On caste le PlayerState reçu en AAmongUsPlayerState pour la compatibilité avec la Map du Subsystem
+		if (AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState))
+		{
+			if (RewindSubsystem->VerifyHit(ClientTimestamp, StartLocation, Rotation, TargetAmongUsPS))
+			{
+				// Tir confirmé après compensation de latence !
+				UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Confirmed! Applying game logic."));
+				// Ici, vous appliquez la logique de jeu (ex: dégâts, mort, etc.)
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied!"));
+			}
+		}
 	}
 }
 

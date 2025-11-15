@@ -13,94 +13,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/RewindableComponent.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/AmongUs/RewindableComponent.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_AmongUsGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_AmongUsGameMode.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_AmongsUsPlayerController.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_AmongsUsPlayerController.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_ThirdPersonCharacter.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_ThirdPersonCharacter.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/ThirdPerson/Blueprints/BP_ThirdPersonGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/ThirdPerson/Blueprints/BP_ThirdPersonGameMode.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/WBP_Menu.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/WBP_Menu.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/WBP_Role.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/WBP_Role.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatAIController.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatAIController.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatEnemy.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatEnemy.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatEnemySpawner.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatEnemySpawner.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatStateTreeUtility.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/CombatStateTreeUtility.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/EnvQueryContext_Player.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/AI/EnvQueryContext_Player.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_CheckChargedAttack.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_CheckChargedAttack.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_CheckCombo.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_CheckCombo.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_DoAttackTrace.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Animation/AnimNotify_DoAttackTrace.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatCharacter.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatCharacter.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatGameMode.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatGameMode.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatPlayerController.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/CombatPlayerController.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatActivationVolume.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatActivationVolume.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatCheckpointVolume.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatCheckpointVolume.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatDamageableBox.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatDamageableBox.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatDummy.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatDummy.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatLavaFloor.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Gameplay/CombatLavaFloor.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatActivatable.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatActivatable.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatAttacker.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatAttacker.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatDamageable.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/Interfaces/CombatDamageable.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/UI/CombatLifeBar.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Combat/UI/CombatLifeBar.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/Animation/AnimNotify_EndDash.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/Animation/AnimNotify_EndDash.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingCharacter.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingCharacter.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingGameMode.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingGameMode.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingPlayerController.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_Platforming/PlatformingPlayerController.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingAIController.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingAIController.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingNPC.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingNPC.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingStateTreeUtility.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/AI/SideScrollingStateTreeUtility.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingJumpPad.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingJumpPad.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingMovingPlatform.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingMovingPlatform.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingPickup.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingPickup.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingSoftPlatform.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Gameplay/SideScrollingSoftPlatform.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Interfaces/SideScrollingInteractable.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/Interfaces/SideScrollingInteractable.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingCameraManager.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingCameraManager.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingCharacter.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingCharacter.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingGameMode.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingGameMode.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingPlayerController.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/SideScrollingPlayerController.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/UI/SideScrollingUI.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Variant_SideScrolling/UI/SideScrollingUI.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,8 +50,10 @@
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/AmongUs/MeshBouton.cpp" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/AmongUs/MeshBouton.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/RewindableComponent.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/RewindableComponent.h" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -299,6 +220,7 @@
       <workItem from="1761250378335" duration="1814000" />
       <workItem from="1761260092597" duration="14221000" />
       <workItem from="1761280285826" duration="2023000" />
+      <workItem from="1763235094686" duration="3764000" />
     </task>
     <servers />
   </component>

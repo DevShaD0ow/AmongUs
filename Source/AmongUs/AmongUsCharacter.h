@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RewindableComponent.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AmongUsCharacter.generated.h"
@@ -32,6 +33,21 @@ protected:
     // ==========================
     // Components
     // ==========================
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rewind", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<URewindableComponent> RewindCapsule; // AJOUT
+
+    /** Input Action for firing/shooting (simulated) */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    class UInputAction* FireAction; // AJOUT
+
+    // Fonction appelée lors du "tir"
+    void Fire(); // AJOUT
+
+    // 7. RPC du client vers le serveur
+    UFUNCTION(Server, Reliable)
+    void ServerConfirmHit(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState);
+    void ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState); // AJOUT
     
     /** Camera boom positioning the camera behind the character */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
