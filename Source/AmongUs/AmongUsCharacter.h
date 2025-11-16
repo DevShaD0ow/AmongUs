@@ -37,10 +37,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rewind", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<URewindableComponent> RewindCapsule; // AJOUT
 
-    /** Input Action for firing/shooting (simulated) */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-    class UInputAction* FireAction; // AJOUT
-
     // Fonction appelée lors du "tir"
     void Fire(); // AJOUT
 

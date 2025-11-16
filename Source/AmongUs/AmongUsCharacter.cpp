@@ -67,10 +67,9 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
 		//Firing
-		if (FireAction)
-		{
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AAmongUsCharacter::Fire);
-		}
+
+		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AAmongUsCharacter::Fire);
+		
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
