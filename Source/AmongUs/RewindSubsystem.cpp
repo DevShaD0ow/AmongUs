@@ -148,9 +148,11 @@ bool URewindSubsystem::VerifyHit(float Timestamp, const FVector& Start, const FR
 
     TMap<URewindableComponent*, FTransform> Originals;
 
+    // 1. Sauvegarder et Rewind les composants
     for (auto& Elem : Rewinded)
     {
         Originals.Add(Elem.Key, Elem.Key->GetComponentToWorld());
+        // Déplace l'objet vers sa position Rewindée
         Elem.Key->SetWorldTransform(Elem.Value);
     }
 
@@ -158,10 +160,10 @@ bool URewindSubsystem::VerifyHit(float Timestamp, const FVector& Start, const FR
     FHitResult Hit;
 
     FCollisionQueryParams Params;
-    Params.AddIgnoredActor(Target->GetPawn());
+    
+    bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Pawn, Params);
 
-    bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-
+    // 3. Remettre les composants à leur position originale
     for (auto& Elem : Originals)
         Elem.Key->SetWorldTransform(Elem.Value);
 
@@ -170,5 +172,6 @@ bool URewindSubsystem::VerifyHit(float Timestamp, const FVector& Start, const FR
     APawn* HitPawn = Cast<APawn>(Hit.GetActor());
     if (!HitPawn) return false;
 
+    // 4. Confirmer que l'acteur touché est bien la cible attendue
     return HitPawn->GetPlayerState() == Target;
 }
