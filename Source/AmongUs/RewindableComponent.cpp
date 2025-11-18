@@ -19,7 +19,6 @@ void URewindableComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Uniquement sur serveur !
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	if (UWorld* World = GetWorld())

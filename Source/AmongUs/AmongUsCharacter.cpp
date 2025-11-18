@@ -16,15 +16,12 @@
 
 AAmongUsCharacter::AAmongUsCharacter()
 {
-	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
-	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 500.f;
@@ -34,21 +31,16 @@ AAmongUsCharacter::AAmongUsCharacter()
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
-	// ** Ajout du Rewindable Component **
 	RewindCapsule = CreateDefaultSubobject<URewindableComponent>(TEXT("RewindCapsule"));
-	// Attacher au RootComponent (CapsuleComponent du Character)
 	RewindCapsule->SetupAttachment(GetCapsuleComponent()); 
-	// S'assurer qu'il a la même taille que la capsule principale
 	RewindCapsule->SetCapsuleRadius(GetCapsuleComponent()->GetScaledCapsuleRadius());
 	RewindCapsule->SetCapsuleHalfHeight(GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-	// Camera boom
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 
-	// Follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
@@ -67,7 +59,6 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
 		//Firing
-
 		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AAmongUsCharacter::Fire);
 		
 		// Looking
@@ -120,7 +111,6 @@ void AAmongUsCharacter::Fire()
 	UWorld* World = GetWorld();
 	if (!World || !IsLocallyControlled()) return;
 
-	// Utiliser la caméra comme point de départ pour le line trace
 	FVector StartLocation = FollowCamera->GetComponentLocation();
 	FRotator CameraRotation = FollowCamera->GetComponentRotation();
 	FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f); 
@@ -140,7 +130,6 @@ void AAmongUsCharacter::Fire()
 		}
 	}
 	
-	// 7. Envoi de la RPC au serveur
 	if (TargetPS)
 	{
 		float ClientTimestamp = World->GetTimeSeconds();
@@ -153,30 +142,67 @@ void AAmongUsCharacter::Fire()
 	}
 }
 
-void AAmongUsCharacter::ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState)
+void AAmongUsCharacter::ServerConfirmHit_Implementation(
+	float ClientTimestamp,
+	const FVector& StartLocation,
+	const FRotator& Rotation,
+	APlayerState* TargetPlayerState)
 {
 	UWorld* World = GetWorld();
-	if (!World) return;
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Server: World NULL"));
+		return;
+	}
 
-	// 8. Demander au RewindSubsystem de vérifier le tir
+	if (!TargetPlayerState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No TargetPlayerState"));
+		return;
+	}
+
+	AAmongUsPlayerState* ShooterPS = GetPlayerState<AAmongUsPlayerState>();
+	if (!ShooterPS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Pas de PlayerState pour le tireur"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Server: Tireur=%s vise Target=%s à t=%.3f"), 
+		*ShooterPS->GetPlayerName(), 
+		*TargetPlayerState->GetPlayerName(), 
+		ClientTimestamp);
+
+	AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState);
+	if (!TargetAmongUsPS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: TargetPlayerState n'est pas AmongUsPlayerState"));
+		return;
+	}
+
+	AAmongUsCharacter* TargetCharacter = Cast<AAmongUsCharacter>(TargetAmongUsPS->GetPawn());
+	if (!TargetCharacter || !TargetCharacter->RewindCapsule)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No RewindCapsule found"));
+		return;
+	}
+
 	if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
 	{
-		// On caste le PlayerState reçu en AAmongUsPlayerState pour la compatibilité avec la Map du Subsystem
-		if (AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState))
+		if (RewindSubsystem->VerifyHit(ClientTimestamp, StartLocation, Rotation, TargetAmongUsPS, ShooterPS))
 		{
-			if (RewindSubsystem->VerifyHit(ClientTimestamp, StartLocation, Rotation, TargetAmongUsPS))
-			{
-				// Tir confirmé après compensation de latence !
-				UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Confirmed! Applying game logic."));
-				// Ici, vous appliquez la logique de jeu (ex: dégâts, mort, etc.)
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied!"));
-			}
+			UE_LOG(LogTemp, Warning, TEXT("✅ Server: Rewind Hit CONFIRMED! %s a touché %s"), 
+				*ShooterPS->GetPlayerName(), *TargetAmongUsPS->GetPlayerName());
+			
+			// TODO: Appliquer la logique de jeu (dégâts, mort, etc.)
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("❌ Server: Rewind Hit DENIED!"));
 		}
 	}
 }
+
 
 void AAmongUsCharacter::DoJumpStart()
 {
@@ -221,4 +247,3 @@ void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)
 		}
 	}
 }
-

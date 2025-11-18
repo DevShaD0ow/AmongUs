@@ -40,8 +40,8 @@ public:
 
 	void RegisterRewindableComponent(URewindableComponent* Component);
 
-	bool VerifyHit(float ClientTimestamp, const FVector& Start, const FRotator& Rot, APlayerState* TargetState);
-
+	bool VerifyHit(float ClientTimestamp, const FVector& Start, const FRotator& Rot, 
+					   APlayerState* TargetState, APlayerState* ShooterState);
 private:
 	void RecordRewindStates(float ServerTime);
 	bool GetRewindStatesForTime(float Time, TMap<URewindableComponent*, FTransform>& OutTransforms);
