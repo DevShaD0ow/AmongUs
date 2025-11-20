@@ -11,15 +11,14 @@ class AMONGUS_API AAmongUsGameMode : public AGameModeBase
 
 public:
 	AAmongUsGameMode();
+	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage);
 
-	// Vérifie si toutes les tâches sont faites
 	void CheckWinCondition();
 	void ChangeMap();
 	void ReturnToLobby();
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
-	// Fonctions principales
 	void AssignRolesOnLevel();
 	void SpawnButtons();
 
@@ -28,12 +27,13 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
 	int32 NumPlayersExpected = 2;
+	int32 ExpectedPlayerCount = 0;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	float GameDuration = 120.0f; 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
-	float GameDuration = 120.0f; // 2 minutes
-
-	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
-	float LobbyCountdownDuration = 30.0f; // 30 secondes
+	float LobbyCountdownDuration = 30.0f;
 
 	FTimerHandle LobbyCountdownTickHandle;
 	FTimerHandle GameCountdownTickHandle;

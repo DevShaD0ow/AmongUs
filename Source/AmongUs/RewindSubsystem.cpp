@@ -9,8 +9,9 @@ bool URewindSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
     if (const UWorld* World = Cast<UWorld>(Outer))
     {
-        return World->GetNetMode() == NM_ListenServer ||
-               World->GetNetMode() == NM_DedicatedServer;
+        ENetMode Mode = World->GetNetMode();
+
+        return (Mode != NM_Client);
     }
     return false;
 }
