@@ -35,6 +35,9 @@ void AAmongUsPlayerState::OnRep_PlayerRole()
 void AAmongUsPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AAmongUsPlayerState, PlayerRole);
+
 }
 
 

@@ -14,10 +14,10 @@
   <component name="ChangeListManager">
     <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AmongUs.sln.DotSettings.user" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/RewindableComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/RewindableComponent.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +43,7 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -222,6 +222,10 @@
       <workItem from="1763252077856" duration="1370000" />
       <workItem from="1763419456079" duration="790000" />
       <workItem from="1763502519940" duration="4554000" />
+      <workItem from="1763511788564" duration="126000" />
+      <workItem from="1763512027825" duration="6000" />
+      <workItem from="1763613698653" duration="278000" />
+      <workItem from="1763618700846" duration="2061000" />
     </task>
     <servers />
   </component>

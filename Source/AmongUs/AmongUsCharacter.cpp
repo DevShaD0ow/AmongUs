@@ -12,6 +12,7 @@
 #include "AmongUs/RewindSubsystem.h"
 #include "InputActionValue.h"
 #include "AmongUs.h"
+#include "AmongUsPlayerController.h"
 #include "Bouton.h"
 
 AAmongUsCharacter::AAmongUsCharacter()
@@ -65,10 +66,6 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
 
 	}
-	else
-	{
-		UE_LOG(LogAmongUs, Error, TEXT("'%s' Failed to find an Enhanced Input component!"), *GetNameSafe(this));
-	}
 }
 
 void AAmongUsCharacter::Move(const FInputActionValue& Value)
@@ -108,99 +105,98 @@ void AAmongUsCharacter::DoLook(float Yaw, float Pitch)
 
 void AAmongUsCharacter::Fire()
 {
-	UWorld* World = GetWorld();
-	if (!World || !IsLocallyControlled()) return;
+    UWorld* World = GetWorld();
+    if (!World || !IsLocallyControlled()) return;
 
-	FVector StartLocation = FollowCamera->GetComponentLocation();
-	FRotator CameraRotation = FollowCamera->GetComponentRotation();
-	FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f); 
+    FVector StartLocation = FollowCamera->GetComponentLocation();
+    FRotator CameraRotation = FollowCamera->GetComponentRotation();
+    FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f);
 
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this); 
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
 
-	bool bHit = World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, Params);
+    bool bHit = World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, Params);
 
-	AAmongUsPlayerState* TargetPS = nullptr;
-	if (bHit)
-	{
-		if (AAmongUsCharacter* HitCharacter = Cast<AAmongUsCharacter>(HitResult.GetActor()))
-		{
-			TargetPS = HitCharacter->GetPlayerState<AAmongUsPlayerState>();
-		}
-	}
-	
-	if (TargetPS)
-	{
-		float ClientTimestamp = World->GetTimeSeconds();
-		ServerConfirmHit(ClientTimestamp, StartLocation, CameraRotation, TargetPS);
-		UE_LOG(LogTemp, Warning, TEXT("Client Fire: Hit %s, Sending RPC @ %.3f"), *TargetPS->GetPlayerName(), ClientTimestamp);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Client Fire: Missed."));
-	}
+    AAmongUsPlayerState* TargetPS = nullptr;
+    if (bHit)
+    {
+        if (AAmongUsCharacter* HitCharacter = Cast<AAmongUsCharacter>(HitResult.GetActor()))
+        	TargetPS = HitCharacter->GetPlayerState<AAmongUsPlayerState>();
+        
+    }
+    if (TargetPS)
+    {
+        AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetController());
+        float EstimatedServerTime = PC ? PC->GetServerWorldTime() : World->GetTimeSeconds();
+        
+        ServerConfirmHit(EstimatedServerTime, StartLocation, CameraRotation, TargetPS);
+        UE_LOG(LogTemp, Warning, TEXT("Client Fire: Hit %s, Sending RPC @ %.3f"), 
+            *TargetPS->GetPlayerName(), EstimatedServerTime);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Client Fire: Missed."));
+    }
 }
 
 void AAmongUsCharacter::ServerConfirmHit_Implementation(
-	float ClientTimestamp,
-	const FVector& StartLocation,
-	const FRotator& Rotation,
-	APlayerState* TargetPlayerState)
+    float ClientTimestamp,
+    const FVector& StartLocation,
+    const FRotator& Rotation,
+    APlayerState* TargetPlayerState)
 {
-	UWorld* World = GetWorld();
-	if (!World)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Server: World NULL"));
-		return;
-	}
+    UWorld* World = GetWorld();
+    if (!World) return;
+    
+	float ServerTime = World->GetTimeSeconds();
+	float TimeDifference = FMath::Abs(ServerTime - ClientTimestamp);
+    
+    const float MaxAcceptableTimeDiff = 0.5f;
+    if (TimeDifference > MaxAcceptableTimeDiff)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Server: Time difference too large (%.3fs), rejecting shot"), TimeDifference);
+        return;
+    }
+    float RewindTime = ClientTimestamp;
 
-	if (!TargetPlayerState)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No TargetPlayerState"));
-		return;
-	}
+    if (!TargetPlayerState)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No TargetPlayerState"));
+        return;
+    }
 
-	AAmongUsPlayerState* ShooterPS = GetPlayerState<AAmongUsPlayerState>();
-	if (!ShooterPS)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server: Pas de PlayerState pour le tireur"));
-		return;
-	}
+    AAmongUsPlayerState* ShooterPS = GetPlayerState<AAmongUsPlayerState>();
+    if (!ShooterPS)return;
+    
 
-	UE_LOG(LogTemp, Warning, TEXT("Server: Tireur=%s vise Target=%s à t=%.3f"), 
-		*ShooterPS->GetPlayerName(), 
-		*TargetPlayerState->GetPlayerName(), 
-		ClientTimestamp);
+    UE_LOG(LogTemp, Warning, TEXT("Server: Tireur=%s vise Target=%s à t=%.3f (Server t=%.3f, diff=%.3fms)"), 
+        *ShooterPS->GetPlayerName(), 
+        *TargetPlayerState->GetPlayerName(), 
+        RewindTime,
+        ServerTime,
+        TimeDifference * 1000.f);
 
-	AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState);
-	if (!TargetAmongUsPS)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server: TargetPlayerState n'est pas AmongUsPlayerState"));
-		return;
-	}
-
-	AAmongUsCharacter* TargetCharacter = Cast<AAmongUsCharacter>(TargetAmongUsPS->GetPawn());
-	if (!TargetCharacter || !TargetCharacter->RewindCapsule)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No RewindCapsule found"));
-		return;
-	}
-
-	if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
-	{
-		if (RewindSubsystem->VerifyHit(ClientTimestamp, StartLocation, Rotation, TargetAmongUsPS, ShooterPS))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("✅ Server: Rewind Hit CONFIRMED! %s a touché %s"), 
-				*ShooterPS->GetPlayerName(), *TargetAmongUsPS->GetPlayerName());
-			
-			// TODO: Appliquer la logique de jeu (dégâts, mort, etc.)
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("❌ Server: Rewind Hit DENIED!"));
-		}
-	}
+    AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState);
+    if (!TargetAmongUsPS)return;
+	
+    AAmongUsCharacter* TargetCharacter = Cast<AAmongUsCharacter>(TargetAmongUsPS->GetPawn());
+    if (!TargetCharacter || !TargetCharacter->RewindCapsule) return;
+	
+    if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
+    {
+        if (RewindSubsystem->VerifyHit(RewindTime, StartLocation, Rotation, TargetAmongUsPS, ShooterPS))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("✅ Server: Rewind Hit CONFIRMED! %s a touché %s"), 
+                *ShooterPS->GetPlayerName(), *TargetAmongUsPS->GetPlayerName());
+            
+            //TO DO: Appliquer la logique de jeu (dégâts, mort, etc.)
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("❌ Server: Rewind Hit DENIED!"));
+        }
+    }
 }
 
 
@@ -243,7 +239,7 @@ void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)
 		AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
 		if (MyPS)
 		{
-			Btn->IncrementTaskServerOnly(MyPS); // ✅ Passe le PlayerState
+			Btn->IncrementTaskServerOnly(MyPS); 
 		}
 	}
 }

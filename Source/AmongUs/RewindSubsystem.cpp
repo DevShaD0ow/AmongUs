@@ -105,29 +105,30 @@ bool URewindSubsystem::GetRewindStatesForTime(float Time, TMap<URewindableCompon
             }
         }
 
-        if (Prev == -1 && Next == -1) 
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Pas d'historique pour %s"), *PS->GetPlayerName());
-            continue;
-        }
+        if (Prev == -1 && Next == -1)continue;
+        
 
         if (Next == -1)
         {
             Out.Add(Comp, History.History[Prev].Transform);
-            UE_LOG(LogTemp, Warning, TEXT("Utilisation dernière frame pour %s"), *PS->GetPlayerName());
             continue;
         }
         
         if (Prev == -1)
         {
             Out.Add(Comp, History.History[Next].Transform);
-            UE_LOG(LogTemp, Warning, TEXT("Utilisation première frame pour %s"), *PS->GetPlayerName());
             continue;
         }
 
         const FRewindState& A = History.History[Prev];
         const FRewindState& B = History.History[Next];
 
+        if (FMath::IsNearlyEqual(A.ServerTime, B.ServerTime, 0.001f))
+        {
+            Out.Add(Comp, A.Transform);
+            continue;
+        }
+        
         float Alpha = (Time - A.ServerTime) / (B.ServerTime - A.ServerTime);
         Alpha = FMath::Clamp(Alpha, 0.f, 1.f);
 
@@ -150,26 +151,19 @@ bool URewindSubsystem::VerifyHit(float ClientTimestamp, const FVector& Start, co
 {
     if (!Target || !Shooter)
     {
-        UE_LOG(LogTemp, Error, TEXT("VerifyHit: Target ou Shooter NULL"));
         return false;
     }
 
     UWorld* World = GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Error, TEXT("VerifyHit: World NULL"));
-        return false;
-    }
+    if (!World)return false;
+    
 
     UE_LOG(LogTemp, Warning, TEXT("VerifyHit: %s tire sur %s à t=%.3f"), 
         *Shooter->GetPlayerName(), *Target->GetPlayerName(), ClientTimestamp);
 
     TMap<URewindableComponent*, FTransform> Rewinded;
-    if (!GetRewindStatesForTime(ClientTimestamp, Rewinded))
-    {
-        UE_LOG(LogTemp, Error, TEXT("VerifyHit: Aucune frame trouvée pour t=%.3f"), ClientTimestamp);
-        return false;
-    }
+    if (!GetRewindStatesForTime(ClientTimestamp, Rewinded))return false;
+    
 
     UE_LOG(LogTemp, Warning, TEXT("VerifyHit: %d composants à rewind"), Rewinded.Num());
 
@@ -187,11 +181,8 @@ bool URewindSubsystem::VerifyHit(float ClientTimestamp, const FVector& Start, co
     FCollisionQueryParams Params;
     Params.bTraceComplex = false;
     
-    if (APawn* ShooterPawn = Shooter->GetPawn())
-    {
-        Params.AddIgnoredActor(ShooterPawn);
-        UE_LOG(LogTemp, Warning, TEXT("VerifyHit: Ignoré tireur %s"), *ShooterPawn->GetName());
-    }
+    if (APawn* ShooterPawn = Shooter->GetPawn())Params.AddIgnoredActor(ShooterPawn);
+    
 
     DrawDebugLine(World, Start, End, FColor::Red, false, 2.0f, 0, 2.0f);
 
@@ -203,28 +194,10 @@ bool URewindSubsystem::VerifyHit(float ClientTimestamp, const FVector& Start, co
         Elem.Key->UpdateComponentToWorld();
     }
 
-    if (!bHit)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("VerifyHit: Aucun hit détecté"));
-        return false;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("VerifyHit: Hit sur %s à distance %.2f"), 
-        *Hit.GetActor()->GetName(), Hit.Distance);
-
+    if (!bHit)return false;
     APawn* HitPawn = Cast<APawn>(Hit.GetActor());
-    if (!HitPawn)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("VerifyHit: L'acteur touché n'est pas un Pawn"));
-        return false;
-    }
-
-    bool bIsCorrectTarget = (HitPawn->GetPlayerState() == Target);
+    if (!HitPawn)return false;
     
-    UE_LOG(LogTemp, Warning, TEXT("VerifyHit: Target attendue=%s, Target touchée=%s, Match=%s"), 
-        *Target->GetPlayerName(), 
-        HitPawn->GetPlayerState() ? *HitPawn->GetPlayerState()->GetPlayerName() : TEXT("NULL"),
-        bIsCorrectTarget ? TEXT("OUI") : TEXT("NON"));
-
+    bool bIsCorrectTarget = (HitPawn->GetPlayerState() == Target);
     return bIsCorrectTarget;
 }
