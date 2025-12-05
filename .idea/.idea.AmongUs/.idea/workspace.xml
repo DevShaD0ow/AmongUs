@@ -13,7 +13,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="" />
+    <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_AmongUsGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_AmongUsGameMode.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Maps/Level.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Level.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Maps/Lobby.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Lobby.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Lobby/0/WK/F9DUW5W0DYZNCRWDZZO8QA.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Lobby/0/WK/F9DUW5W0DYZNCRWDZZO8QA.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Lobby/5/I8/81X8MO87UPHYJEU7Y0U316.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Lobby/5/I8/81X8MO87UPHYJEU7Y0U316.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -39,11 +57,13 @@
 }</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsGameState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/AmongUs/RewindSubsystem.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -240,6 +260,10 @@
       <workItem from="1763665296334" duration="451000" />
       <workItem from="1763666360281" duration="391000" />
       <workItem from="1763667218153" duration="341000" />
+      <workItem from="1764139110380" duration="192000" />
+      <workItem from="1764896982964" duration="2575000" />
+      <workItem from="1764899642363" duration="1777000" />
+      <workItem from="1764901517418" duration="365000" />
     </task>
     <servers />
   </component>

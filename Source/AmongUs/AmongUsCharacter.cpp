@@ -12,6 +12,7 @@
 #include "AmongUs/RewindSubsystem.h"
 #include "InputActionValue.h"
 #include "AmongUs.h"
+#include "AmongUsGameMode.h"
 #include "AmongUsPlayerController.h"
 #include "Bouton.h"
 
@@ -190,7 +191,13 @@ void AAmongUsCharacter::ServerConfirmHit_Implementation(
             UE_LOG(LogTemp, Warning, TEXT("✅ Server: Rewind Hit CONFIRMED! %s a touché %s"), 
                 *ShooterPS->GetPlayerName(), *TargetAmongUsPS->GetPlayerName());
             
-            //TO DO: Appliquer la logique de jeu (dégâts, mort, etc.)
+        	TargetCharacter->MulticastTriggerDeath();
+        	TargetAmongUsPS->SetPlayerRole(EPlayerRole::Mort);
+
+        	if (AAmongUsGameMode* GM = Cast<AAmongUsGameMode>(GetWorld()->GetAuthGameMode()))
+        	{
+        		GM->CheckWinCondition();
+        	}
         }
         else
         {
@@ -241,5 +248,26 @@ void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)
 		{
 			Btn->IncrementTaskServerOnly(MyPS); 
 		}
+	}
+}
+
+void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
+{
+	// 1. Désactiver le contrôle de mouvement (très important pour le client local)
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->SetComponentTickEnabled(false);
+
+	// 2. Désactiver la capsule de collision (pour ne pas que le corps rebondisse dessus)
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// 3. Activer le Ragdoll sur le Mesh
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetSimulatePhysics(true);
+        
+		// Petit boost pour faire tomber le corps de façon plus naturelle
+		GetMesh()->AddImpulse(FVector(0, 0, -100.f), NAME_None, true); 
 	}
 }

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Net/UnrealNetwork.h"
 #include "AmongUsPlayerState.generated.h"
 
 // Définition des rôles des joueurs
@@ -21,13 +22,6 @@ class AMONGUS_API AAmongUsPlayerState : public APlayerState
 
 public:
 	AAmongUsPlayerState();
-
-protected:
-	// Rôle du joueur
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
-	EPlayerRole PlayerRole;
-
-public:
 	// Getters et setters pour le rôle
 	UFUNCTION(BlueprintCallable, Category = "Role")
 	void SetPlayerRole(EPlayerRole NewRole);
@@ -40,4 +34,15 @@ public:
 	void OnRep_PlayerRole();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UPROPERTY(Replicated,BlueprintReadWrite)int32 ColorID;
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	bool bIsReady = false;
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void ServerSetReady(bool bReady);
+protected:
+	// Rôle du joueur
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
+	EPlayerRole PlayerRole;
+	
 };

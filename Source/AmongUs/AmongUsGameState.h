@@ -21,6 +21,7 @@ public:
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	bool bRolesAssigned;
 
+
 	// Countdown du lobby
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	int32 LobbyCountdown;
@@ -28,7 +29,6 @@ public:
 	// Countdown de la partie
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	int32 GameCountdown;
-
 	FTimerHandle LobbyTimerHandle;
 	FTimerHandle GameTimerHandle;
 
@@ -46,8 +46,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-private:
 	
 };
 	

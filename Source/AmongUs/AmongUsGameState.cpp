@@ -9,7 +9,7 @@ AAmongUsGameState::AAmongUsGameState()
 	bRolesAssigned = false;
 	nbTache = 0;
 	LobbyCountdown = 30;
-	GameCountdown = 120;
+	GameCountdown = 300;
 }
 
 void AAmongUsGameState::BeginPlay()

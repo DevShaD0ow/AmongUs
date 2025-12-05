@@ -11,11 +11,16 @@ class AMONGUS_API AAmongUsGameMode : public AGameModeBase
 
 public:
 	AAmongUsGameMode();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Counter")int32 nbGentil;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Counter")int32 nbMechant;
+	
 	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage);
 
 	void CheckWinCondition();
 	void ChangeMap();
 	void ReturnToLobby();
+	void CheckAllPlayersReady();
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -23,6 +28,7 @@ protected:
 	void SpawnButtons();
 
 private:
+	
 	bool bHasMapChanged;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")

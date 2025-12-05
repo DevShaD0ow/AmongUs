@@ -13,10 +13,16 @@ public:
 	AAmongUsPlayerController();
 
 	virtual void BeginPlay() override;
-	virtual void SetupInputComponent() override;
 	virtual void PostNetInit() override;
 	UFUNCTION(BlueprintPure, Category="Network Clock")
 	float GetServerWorldTimeDelta() const;
+	
+	// Fonction pour passer en mode spectateur
+    void EnterSpectatorMode();
+    
+    // Pour changer de cible (clic gauche/droit)
+    void SpectateNextPlayer();
+    void SpectatePreviousPlayer();
 
 	UFUNCTION(BlueprintPure, Category="Network Clock")
 	float GetServerWorldTime() const;
@@ -38,6 +44,8 @@ public:
 	void ToggleQuitMenu();
 
 protected:
+	virtual void SetupInputComponent() override;
+
 	// === Input Mapping ===
 	UPROPERTY(EditAnywhere, Category="Input")
 	TArray<class UInputMappingContext*> DefaultMappingContexts;
@@ -50,6 +58,8 @@ protected:
 	float NetworkClockUpdateFrequency = 1.0f; // toutes les secondes
 
 private:
+	int32 SpectatedPlayerIndex = 0;
+	
 	float ServerWorldTimeDelta = 0.f;
 	TArray<float> RTTCircularBuffer;
 

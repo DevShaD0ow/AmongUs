@@ -51,6 +51,7 @@ void AAmongUsPlayerController::SetupInputComponent()
 
 	if (IsLocalPlayerController())
 	{
+		InputComponent->BindAction("RightClick", IE_Pressed, this, &AAmongUsPlayerController::SpectatePreviousPlayer);
 		InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AAmongUsPlayerController::OnInteractPressed);
 
 		// Bind touche F pour afficher/masquer le widget Quit
@@ -134,6 +135,88 @@ void AAmongUsPlayerController::ToggleQuitMenu()
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("ToggleQuitMenu: Widget %s"), bIsVisible ? TEXT("masqué") : TEXT("affiché"));
+}
+void AAmongUsPlayerController::EnterSpectatorMode()
+{
+
+	if (GetPawn())
+	{
+		UnPossess(); 
+	}
+
+	ChangeState(NAME_Spectating);
+
+	SpectateNextPlayer();
+    
+	UE_LOG(LogTemp, Warning, TEXT("Mode Spectateur Activé !"));
+}
+
+void AAmongUsPlayerController::SpectateNextPlayer()
+{
+	if (!IsInState(NAME_Spectating)) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	AGameStateBase* GS = World->GetGameState();
+	if (!GS) return;
+
+	// On parcourt la liste des joueurs pour trouver le prochain vivant
+	TArray<APlayerState*> PlayerArray = GS->PlayerArray;
+	int32 NumPlayers = PlayerArray.Num();
+    
+	// Sécurité pour éviter boucle infinie si tout le monde est mort
+	int32 Attempts = 0; 
+    
+	while (Attempts < NumPlayers)
+	{
+		SpectatedPlayerIndex = (SpectatedPlayerIndex + 1) % NumPlayers;
+		AAmongUsPlayerState* PS = Cast<AAmongUsPlayerState>(PlayerArray[SpectatedPlayerIndex]);
+
+		// Si le joueur est valide, n'est pas nous-même, et est vivant (ou un rôle spécifique)
+		if (PS && PS != PlayerState && PS->GetPlayerRole() != EPlayerRole::Mort && PS->GetPawn())
+		{
+			SetViewTargetWithBlend(PS->GetPawn(), 0.5f, VTBlend_Cubic);
+			UE_LOG(LogTemp, Warning, TEXT("Spectating: %s"), *PS->GetPlayerName());
+			return;
+		}
+		Attempts++;
+	}
+}
+
+void AAmongUsPlayerController::SpectatePreviousPlayer()
+{
+	if (!IsInState(NAME_Spectating)) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	AGameStateBase* GS = World->GetGameState();
+	if (!GS) return;
+
+	TArray<APlayerState*> PlayerArray = GS->PlayerArray;
+	int32 NumPlayers = PlayerArray.Num();
+    
+	if (NumPlayers == 0) return;
+
+	int32 Attempts = 0; 
+	
+	while (Attempts < NumPlayers)
+	{
+
+		SpectatedPlayerIndex = (SpectatedPlayerIndex - 1 + NumPlayers) % NumPlayers;
+
+		AAmongUsPlayerState* PS = Cast<AAmongUsPlayerState>(PlayerArray[SpectatedPlayerIndex]);
+
+		if (PS && PS != PlayerState && PS->GetPlayerRole() != EPlayerRole::Mort && PS->GetPawn())
+		{
+			SetViewTargetWithBlend(PS->GetPawn(), 0.5f, VTBlend_Cubic);
+			UE_LOG(LogTemp, Warning, TEXT("Spectating Previous: %s"), *PS->GetPlayerName());
+			return;
+		}
+
+		Attempts++;
+	}
 }
 
 
