@@ -48,6 +48,27 @@ AAmongUsCharacter::AAmongUsCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 }
 
+void AAmongUsCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
+	if (PS)
+	{
+		ApplyColorToSkin(PS->PlayerColor);
+		UE_LOG(LogTemp, Warning, TEXT("Client : PlayerState reçu ! Couleur appliquée : %d"), (int32)PS->PlayerColor);
+	}
+}
+
+void AAmongUsCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
+	if (PS)
+	{
+		ApplyColorToSkin(PS->PlayerColor);
+	}
+}
+
 void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
@@ -269,5 +290,45 @@ void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
         
 		// Petit boost pour faire tomber le corps de façon plus naturelle
 		GetMesh()->AddImpulse(FVector(0, 0, -100.f), NAME_None, true); 
+	}
+}
+void AAmongUsCharacter::ApplyColorToSkin(EPlayerColor Color)
+{
+	USkeletalMeshComponent* MyMesh = GetMesh();
+	if (!MyMesh) return;
+
+	const int32 MaterialIndex = 0; 
+
+	// Créer un Material Instance Dynamic (MID) si ce n'est pas déjà fait
+	// Cela permet de changer les paramètres sans changer le fichier asset d'origine
+	UMaterialInterface* CurrentMat = MyMesh->GetMaterial(MaterialIndex);
+	UMaterialInstanceDynamic* DynMat = Cast<UMaterialInstanceDynamic>(CurrentMat);
+
+	if (!DynMat)
+	{
+		DynMat = MyMesh->CreateDynamicMaterialInstance(MaterialIndex);
+	}
+
+	if (DynMat)
+	{
+		FLinearColor SelectedColor = GetLinearColorFromEnum(Color);
+		// "PlayerColor" doit être EXACTEMENT le nom du paramètre dans M_PlayerColor
+		DynMat->SetVectorParameterValue(FName("PlayerColor"), SelectedColor);
+	}
+}
+
+FLinearColor AAmongUsCharacter::GetLinearColorFromEnum(EPlayerColor Color)
+{
+	switch (Color)
+	{
+	case EPlayerColor::Red: return FLinearColor::Red;
+	case EPlayerColor::Blue: return FLinearColor::Blue;
+	case EPlayerColor::Green: return FLinearColor::Green;
+	case EPlayerColor::Yellow: return FLinearColor::Yellow;
+	case EPlayerColor::Purple: return FLinearColor(0.5f, 0.0f, 0.5f);
+	case EPlayerColor::Cyan: return FLinearColor(0.0f, 1.0f, 1.0f);
+	case EPlayerColor::Orange: return FLinearColor(1.0f, 0.5f, 0.0f);
+	case EPlayerColor::Pink: return FLinearColor(1.0f, 0.07f, 0.57f);
+	default: return FLinearColor::White;
 	}
 }

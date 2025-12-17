@@ -6,6 +6,7 @@
 #include "RewindableComponent.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AmongUsPlayerState.h"
 #include "AmongUsCharacter.generated.h"
 
 class USpringArmComponent;
@@ -28,8 +29,18 @@ class AMONGUS_API AAmongUsCharacter : public ACharacter
 public:
     /** Constructor */
     AAmongUsCharacter();
+    virtual void OnRep_PlayerState() override;
+
+    // Appelée sur le SERVEUR quand le Controller prend possession du Pion
+    virtual void PossessedBy(AController* NewController) override;
     UFUNCTION(NetMulticast, Reliable)
     void MulticastTriggerDeath();
+    
+    UFUNCTION(BlueprintCallable)
+    void ApplyColorToSkin(EPlayerColor Color);
+
+    // Helper pour convertir l'enum en vraie couleur RGB
+    FLinearColor GetLinearColorFromEnum(EPlayerColor Color);
 
 protected:
     // ==========================

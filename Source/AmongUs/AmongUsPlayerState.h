@@ -13,6 +13,19 @@ enum class EPlayerRole : uint8
 	Mechant UMETA(DisplayName = "Méchant"),
 	Mort UMETA(DisplayName = "Mort")
 };
+UENUM(BlueprintType)
+enum class EPlayerColor : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Red UMETA(DisplayName = "Red"),
+	Blue UMETA(DisplayName = "Blue"),
+	Green UMETA(DisplayName = "Green"),
+	Yellow UMETA(DisplayName = "Yellow"),
+	Purple UMETA(DisplayName = "Purple"),
+	Cyan UMETA(DisplayName = "Cyan"),
+	Orange UMETA(DisplayName = "Orange"),
+	Pink UMETA(DisplayName = "Pink")
+};
 
 // Classe PlayerState spécifique pour Among Us
 UCLASS()
@@ -40,6 +53,19 @@ public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void ServerSetReady(bool bReady);
+	// Couleur
+	// Variable répliquée (Le serveur l'envoie à tout le monde)
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, BlueprintReadOnly, Category = "Color")
+	EPlayerColor PlayerColor;
+
+	// Fonction appelée quand la couleur change
+	UFUNCTION()
+	void OnRep_PlayerColor();
+
+	// Fonction pour demander une couleur au serveur
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void ServerRequestColor(EPlayerColor RequestedColor);
+	
 protected:
 	// Rôle du joueur
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
