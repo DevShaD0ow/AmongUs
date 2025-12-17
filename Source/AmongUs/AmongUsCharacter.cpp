@@ -127,8 +127,15 @@ void AAmongUsCharacter::DoLook(float Yaw, float Pitch)
 
 void AAmongUsCharacter::Fire()
 {
-    UWorld* World = GetWorld();
-    if (!World || !IsLocallyControlled()) return;
+	UWorld* World = GetWorld();
+	if (!World || !IsLocallyControlled()) return;
+
+	if (World->GetMapName().EndsWith("Lobby"))return; 
+	
+
+	AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
+	if (!MyPS || MyPS->GetPlayerRole() != EPlayerRole::Mechant)return;
+	
 
     FVector StartLocation = FollowCamera->GetComponentLocation();
     FRotator CameraRotation = FollowCamera->GetComponentRotation();

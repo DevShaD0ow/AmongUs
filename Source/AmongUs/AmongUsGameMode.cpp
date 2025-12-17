@@ -19,6 +19,55 @@ AAmongUsGameMode::AAmongUsGameMode()
     bUseSeamlessTravel = true;
 }
 
+void AAmongUsGameMode::BeginPlay()
+{
+    Super::BeginPlay();
+
+    UWorld* World = GetWorld();
+    if (World && World->GetMapName().EndsWith("Level"))
+    {
+        GetWorldTimerManager().SetTimer(StartCheckTimer, this, &AAmongUsGameMode::CheckLevelStart, 1.0f, true);
+        UE_LOG(LogTemp, Warning, TEXT("Level : En attente des joueurs via Seamless Travel..."));
+    }
+}
+
+void AAmongUsGameMode::CheckLevelStart()
+{
+    AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
+    if (!GS) return;
+
+    if (GS->bRolesAssigned)
+    {
+        GetWorldTimerManager().ClearTimer(StartCheckTimer);
+        return;
+    }
+
+    int32 CurrentPlayerCount = GS->PlayerArray.Num();
+
+    if (CurrentPlayerCount >= ExpectedPlayerCount && ExpectedPlayerCount > 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Level : Tous les joueurs (%d/%d) sont arrivés ! Lancement."), CurrentPlayerCount, ExpectedPlayerCount);
+
+        GetWorldTimerManager().ClearTimer(StartCheckTimer);
+
+        GS->nbTache = FMath::RandRange(5, 10);
+        GS->bRolesAssigned = true;
+
+        AssignRolesOnLevel();
+        SpawnButtons();
+
+        GS->GameCountdown = 300; // 5 minutes
+        if (!GetWorldTimerManager().IsTimerActive(GS->GameTimerHandle))
+        {
+            GetWorldTimerManager().SetTimer(GS->GameTimerHandle, GS, &AAmongUsGameState::GameCountdownTick, 1.0f, true);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Level : Chargement des joueurs... (%d/%d)"), CurrentPlayerCount, ExpectedPlayerCount);
+    }
+}
+
 void AAmongUsGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
     Super::InitGame(MapName, Options, ErrorMessage);
@@ -29,63 +78,17 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
 
-    AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(NewPlayer);
-    if (!PC) return;
-
     AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
     if (!GS) return;
 
-    int32 CurrentPlayerCount = GS->PlayerArray.Num();
     UWorld* World = GetWorld();
     if (!World) return;
-
-    // --- LOGIQUE MAP LOBBY ---
+    
     if (World->GetMapName().EndsWith("Lobby"))
     {
-        if (CurrentPlayerCount >= 2 && !GetWorldTimerManager().IsTimerActive(GS->LobbyTimerHandle))
-        {
-            GS->LobbyCountdown = 10; // 10 secondes avant le départ
-            GetWorldTimerManager().SetTimer(GS->LobbyTimerHandle, GS, &AAmongUsGameState::LobbyCountdownTick, 1.0f, true);
-            UE_LOG(LogTemp, Warning, TEXT("TEST MODE: Lancement auto du Lobby avec %d joueurs !"), CurrentPlayerCount);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Lobby : Joueur connecté (%d). En attente de 2 joueurs..."), CurrentPlayerCount);
-        }
-    }
-    // --- LOGIQUE MAP LEVEL (Jeu Principal) ---
-    else if (World->GetMapName().EndsWith("Level"))
-    {
-        // On vérifie que les rôles ne sont pas déjà donnés
-        if (!HasAuthority() || GS->bRolesAssigned) return;
-        
-        if (CurrentPlayerCount >= ExpectedPlayerCount) 
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Level : Tous les joueurs sont là. Lancement du jeu !"));
-
-            // 1. Initialiser les variables de jeu
-            GS->nbTache = FMath::RandRange(5, 10);
-            GS->bRolesAssigned = true;
-
-            FTimerHandle RoleAssignTimerHandle;
-            GetWorldTimerManager().SetTimer(RoleAssignTimerHandle, [this]()
-            {
-                AssignRolesOnLevel();
-                SpawnButtons();
-            }, 1.0f, false);
-
-            GS->GameCountdown = static_cast<int32>(GameDuration);
-            
-            // Démarrer le tick du timer dans le GameState
-            if (!GetWorldTimerManager().IsTimerActive(GS->GameTimerHandle))
-            {
-                GetWorldTimerManager().SetTimer(GS->GameTimerHandle, GS, &AAmongUsGameState::GameCountdownTick, 1.0f, true);
-            }
-        }
-        else
-        {
-             UE_LOG(LogTemp, Warning, TEXT("Level : En attente de joueurs... (%d/%d)"), CurrentPlayerCount, ExpectedPlayerCount);
-        }
+        int32 CurrentPlayerCount = GS->PlayerArray.Num();
+        UE_LOG(LogTemp, Warning, TEXT("Lobby : Joueur connecté (%d). En attente du Ready..."), CurrentPlayerCount);
+        CheckAllPlayersReady();
     }
 }
 
@@ -208,6 +211,16 @@ void AAmongUsGameMode::ReturnToLobby()
 {
     UWorld* World = GetWorld();
     if (!World) return;
+
+    if (AAmongUsGameState* GS = GetGameState<AAmongUsGameState>())
+    {
+        for (APlayerState* PS : GS->PlayerArray)
+        {
+            if (AAmongUsPlayerState* MyPS = Cast<AAmongUsPlayerState>(PS))MyPS->bIsReady = false;
+        }
+    }
+
+    // 4. Lancer le voyage
     World->ServerTravel("/Game/Maps/Lobby?listen");
 }
 

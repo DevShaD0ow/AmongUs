@@ -11,7 +11,8 @@ class AMONGUS_API AAmongUsGameMode : public AGameModeBase
 
 public:
 	AAmongUsGameMode();
-
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Counter")int32 nbGentil;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Counter")int32 nbMechant;
 	
@@ -23,9 +24,10 @@ public:
 	void CheckAllPlayersReady();
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
-
 	void AssignRolesOnLevel();
 	void SpawnButtons();
+	void CheckLevelStart(); 
+	FTimerHandle StartCheckTimer;
 
 private:
 	
