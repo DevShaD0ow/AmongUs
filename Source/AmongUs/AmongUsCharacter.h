@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AmongUsPlayerState.h"
+#include "ColorCube.h"
 #include "AmongUsCharacter.generated.h"
 
 class USpringArmComponent;
@@ -41,6 +42,9 @@ public:
 
     // Helper pour convertir l'enum en vraie couleur RGB
     FLinearColor GetLinearColorFromEnum(EPlayerColor Color);
+    
+    UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+    void OnOpenColorPicker();
 
 protected:
     // ==========================

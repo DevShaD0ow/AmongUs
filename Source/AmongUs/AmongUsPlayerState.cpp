@@ -44,6 +44,20 @@ void AAmongUsPlayerState::OnRep_PlayerRole()
         }
     }
 }
+void AAmongUsPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+    Super::CopyProperties(PlayerState);
+
+    AAmongUsPlayerState* TargetPS = Cast<AAmongUsPlayerState>(PlayerState);
+    if (TargetPS)
+    {
+        TargetPS->PlayerColor = this->PlayerColor;
+        TargetPS->PlayerRole = this->PlayerRole; 
+        
+        TargetPS->ColorID = this->ColorID;
+        TargetPS->bIsReady = this->bIsReady;
+    }
+}
 
 void AAmongUsPlayerState::ServerRequestColor_Implementation(EPlayerColor RequestedColor)
 {

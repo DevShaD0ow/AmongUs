@@ -15,6 +15,8 @@ AAmongUsGameMode::AAmongUsGameMode()
     PlayerStateClass = AAmongUsPlayerState::StaticClass();
     DefaultPawnClass = AAmongUsCharacter::StaticClass();
     ExpectedPlayerCount = 0;
+    
+    bUseSeamlessTravel = true;
 }
 
 void AAmongUsGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -65,7 +67,6 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
             GS->nbTache = FMath::RandRange(5, 10);
             GS->bRolesAssigned = true;
 
-            // 2. Assigner les rôles et spawner les boutons (avec un petit délai de sécurité)
             FTimerHandle RoleAssignTimerHandle;
             GetWorldTimerManager().SetTimer(RoleAssignTimerHandle, [this]()
             {
@@ -73,8 +74,7 @@ void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
                 SpawnButtons();
             }, 1.0f, false);
 
-            // 3. Lancer le timer de fin de partie (5 minutes)
-            GS->GameCountdown = static_cast<int32>(GameDuration); // Assurez-vous que GameDuration = 300
+            GS->GameCountdown = static_cast<int32>(GameDuration);
             
             // Démarrer le tick du timer dans le GameState
             if (!GetWorldTimerManager().IsTimerActive(GS->GameTimerHandle))

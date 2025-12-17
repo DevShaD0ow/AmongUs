@@ -250,11 +250,18 @@ void AAmongUsCharacter::TryInteract()
 	{
 		for (auto& Hit : Hits)
 		{
-			ABouton* Btn = Cast<ABouton>(Hit.GetActor());
+			AActor* HitActor = Hit.GetActor();
+			ABouton* Btn = Cast<ABouton>(HitActor);
 			if (Btn)
 			{
 				ServerInteractWithButton(Btn);
 				break;
+			}
+			
+			if (Cast<AColorCube>(HitActor))
+			{
+				OnOpenColorPicker();
+				return; 
 			}
 		}
 	}

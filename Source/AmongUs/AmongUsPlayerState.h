@@ -71,4 +71,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
 	EPlayerRole PlayerRole;
 	
+	virtual void CopyProperties(APlayerState* PlayerState) override;
+	
 };
