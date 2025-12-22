@@ -9,7 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "AmongUs/RewindSubsystem.h"
 #include "InputActionValue.h"
-#include "AmongUs.h"
+#include "Sessions/OTSessionMenu.h"
 #include "AmongUsGameMode.h"
 #include "AmongUsPlayerController.h"
 #include "Bouton.h"
@@ -51,7 +51,6 @@ void AAmongUsCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Cache des boutons pour optimiser l'affichage du highlight
     TArray<AActor*> Actors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABouton::StaticClass(), Actors);
     
@@ -90,6 +89,7 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
         EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
         EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Move);
+        // Look est toujours bindé, donc la caméra bougera même mort
         EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
         EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
         PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AAmongUsCharacter::Fire);
@@ -98,12 +98,19 @@ void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AAmongUsCharacter::Move(const FInputActionValue& Value)
 {
+    // BLOQUER LE MOUVEMENT SI MORT
+    if (AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>())
+    {
+        if (PS->GetPlayerRole() == EPlayerRole::Mort) return;
+    }
+
     FVector2D MovementVector = Value.Get<FVector2D>();
     DoMove(MovementVector.X, MovementVector.Y);
 }
 
 void AAmongUsCharacter::Look(const FInputActionValue& Value)
 {
+    // On ne bloque PAS Look, le joueur mort peut tourner la caméra
     FVector2D LookAxisVector = Value.Get<FVector2D>();
     DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
@@ -140,6 +147,12 @@ void AAmongUsCharacter::DoJumpEnd()
 
 void AAmongUsCharacter::TryInteract()
 {
+    // BLOQUER L'INTERACTION SI MORT
+    if (AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>())
+    {
+        if (PS->GetPlayerRole() == EPlayerRole::Mort) return;
+    }
+
     FVector PlayerLocation = GetActorLocation();
     TArray<FHitResult> Hits;
     FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractionDistance);
@@ -177,7 +190,6 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
     {
         if (!Task.bIsCompleted)
         {
-            // Vérification de l'ordre strict
             if (Task.TaskID == Btn->TaskIDRef)
             {
                 TSubclassOf<UUserWidget> WidgetClassToSpawn = Task.TaskWidgetClass;
@@ -190,7 +202,6 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
                         UUserWidget* TaskWidget = CreateWidget<UUserWidget>(PC, WidgetClassToSpawn);
                         if (TaskWidget)
                         {
-                            // if (UAmongUsTaskBase* TaskBase = Cast<UAmongUsTaskBase>(TaskWidget)) TaskBase->CurrentTaskID = Task.TaskID;
                             TaskWidget->AddToViewport();
                             FInputModeUIOnly InputMode;
                             InputMode.SetWidgetToFocus(TaskWidget->TakeWidget());
@@ -204,7 +215,7 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
             {
                 UE_LOG(LogAmongUsCharacter, Warning, TEXT("Ordre incorrect ! Tâche active : %s"), *Task.TaskID.ToString());
             }
-            return; // On sort pour empêcher de faire les tâches suivantes
+            return; 
         }
     }
 }
@@ -217,7 +228,6 @@ void AAmongUsCharacter::UpdateTaskHighlights()
     if (!PS) return;
 
     FName TargetTaskID = NAME_None;
-    // Trouver la première tâche non finie
     for (const FAmongUsTask& Task : PS->AssignedTasks)
     {
         if (!Task.bIsCompleted)
@@ -227,7 +237,6 @@ void AAmongUsCharacter::UpdateTaskHighlights()
         }
     }
 
-    // Mettre à jour les boutons
     for (ABouton* Btn : CachedButtons)
     {
         if (!Btn) continue;
@@ -289,7 +298,8 @@ void AAmongUsCharacter::Fire()
     if (World->GetMapName().EndsWith("Lobby")) return; 
     
     AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
-    if (!MyPS || MyPS->GetPlayerRole() != EPlayerRole::Mechant) return;
+    // VERIFICATION MORT AJOUTÉE (implicite via Mechant mais sécurité supplémentaire)
+    if (!MyPS || MyPS->GetPlayerRole() != EPlayerRole::Mechant || MyPS->GetPlayerRole() == EPlayerRole::Mort) return;
 
     FVector StartLocation = FollowCamera->GetComponentLocation();
     FRotator CameraRotation = FollowCamera->GetComponentRotation();
@@ -350,6 +360,7 @@ void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
     GetCharacterMovement()->StopMovementImmediately();
     GetCharacterMovement()->DisableMovement();
     GetCharacterMovement()->SetComponentTickEnabled(false);
+    
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     if (GetMesh())
@@ -358,4 +369,5 @@ void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
         GetMesh()->SetSimulatePhysics(true);
         GetMesh()->AddImpulse(FVector(0, 0, -100.f), NAME_None, true); 
     }
+    
 }

@@ -49,13 +49,10 @@ EPlayerRole AAmongUsPlayerState::GetPlayerRole() const
 
 void AAmongUsPlayerState::OnRep_PlayerRole()
 {
-    if (PlayerRole == EPlayerRole::Mort)
-    {
-        if (AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetPlayerController()))
-        {
-            if (PC->IsLocalController()) PC->EnterSpectatorMode();
-        }
-    }
+    // RETRAIT DE LA LOGIQUE SPECTATEUR ICI
+    // Quand on meurt, on ne change plus le mode du contrôleur.
+    // Le Character va gérer le Ragdoll via MulticastTriggerDeath.
+    UE_LOG(LogTemp, Warning, TEXT("Nouveau Role : %d"), (int32)PlayerRole);
 }
 
 void AAmongUsPlayerState::ServerRequestColor_Implementation(EPlayerColor RequestedColor)

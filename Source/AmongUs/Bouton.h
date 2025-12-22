@@ -47,8 +47,5 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void IncrementTaskServerOnly(AAmongUsPlayerState* PlayerState);
-
-protected:
-	// --- Lifecycle ---
-	virtual void BeginPlay() override;
+	
 };

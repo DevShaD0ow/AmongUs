@@ -75,7 +75,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
     float InteractionDistance = 200.f; 
-
+    
 protected:
     // --- Internal Input Callbacks ---
     void Move(const FInputActionValue& Value);

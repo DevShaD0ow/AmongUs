@@ -11,6 +11,9 @@
 #include "Widgets/Input/SVirtualJoystick.h"
 #include "TimerManager.h"
 
+// IMPORTANT : On inclut le header du Plugin pour configurer le menu
+#include "Sessions/OTSessionMenu.h"
+
 AAmongUsPlayerController::AAmongUsPlayerController()
 {
 	bReplicates = true;
@@ -20,25 +23,54 @@ void AAmongUsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Vérifie si on a un Pawn
-	if (GetPawn())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Pawn possédé: %s"), *GetPawn()->GetName());
+	FString MapName = GetWorld()->GetMapName();
+    
+	// DEBUG FORCE
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, FString::Printf(TEXT("MAP ACTUELLE: %s"), *MapName));
+    
+	if (SessionMenuWidgetClass == nullptr) {
+		GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, TEXT("ERREUR: Le WIDGET n'est pas assigné dans le BP !"));
 	}
-	else
+
+	if (MapName.Contains("MainMenu"))
 	{
-		// Delay léger pour attendre possession
-		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, [this]()
-		{
-			if (GetPawn())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Pawn possédé (après délai): %s"), *GetPawn()->GetName());
-			}
-		}, 0.1f, false);
+		GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Green, TEXT("SUCCES: Map MainMenu détectée, affichage du menu..."));
+		ShowSessionMenu();
+		bShowMouseCursor = true;
+		SetInputMode(FInputModeUIOnly());
+		return; 
 	}
 }
 
+// === ONLINE TOOLBOX ===
+void AAmongUsPlayerController::ShowSessionMenu()
+{
+	if (!SessionMenuWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ATTENTION : SessionMenuWidgetClass n'est pas assigné dans BP_AmongUsPlayerController !"));
+		return;
+	}
+
+	// Création du Widget
+	UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(this, SessionMenuWidgetClass);
+	
+	if (WidgetInstance)
+	{
+		// On essaie de le caster en UOTSessionMenu pour utiliser la fonction de setup automatique
+		if (UOTSessionMenu* SessionMenu = Cast<UOTSessionMenu>(WidgetInstance))
+		{
+			// MenuSetup gère : AddToViewport, Visibility, InputMode, MouseCursor
+			SessionMenu->MenuSetup(true, true, true, true);
+			UE_LOG(LogTemp, Log, TEXT("Menu Session affiché via OnlineToolbox."));
+		}
+		else
+		{
+			// Fallback si le cast échoue (mais ça ne devrait pas arriver si tu as mis le bon widget)
+			WidgetInstance->AddToViewport();
+			UE_LOG(LogTemp, Warning, TEXT("Le widget n'est pas un UOTSessionMenu, affichage standard."));
+		}
+	}
+}
 
 void AAmongUsPlayerController::QuitGameClient()
 {
@@ -51,10 +83,7 @@ void AAmongUsPlayerController::SetupInputComponent()
 
 	if (IsLocalPlayerController())
 	{
-		InputComponent->BindAction("RightClick", IE_Pressed, this, &AAmongUsPlayerController::SpectatePreviousPlayer);
 		InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AAmongUsPlayerController::OnInteractPressed);
-
-		// Bind touche F pour afficher/masquer le widget Quit
 		InputComponent->BindKey(EKeys::F, IE_Pressed, this, &AAmongUsPlayerController::ToggleQuitMenu);
 
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
@@ -85,21 +114,10 @@ void AAmongUsPlayerController::OnInteractPressed()
 // === Toggle Quit Menu ===
 void AAmongUsPlayerController::ToggleQuitMenu()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ToggleQuitMenu appelé"));
+	if (!QuitMenuWidgetClass) return;
 
 	if (!QuitMenuWidgetInstance)
 	{
-		if (!QuitMenuWidgetClass)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("QuitMenuWidgetClass NULL, tentative de chargement dynamique"));
-			QuitMenuWidgetClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_Menu.WBP_Menu_C"));
-			if (!QuitMenuWidgetClass)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Impossible de charger le widget à ce chemin : /Game/UI/WBP_Menu.WBP_Menu_C"));
-				return;
-			}
-		}
-
 		QuitMenuWidgetInstance = CreateWidget<UUserWidget>(this, QuitMenuWidgetClass);
 		if (QuitMenuWidgetInstance)
 		{
@@ -107,14 +125,10 @@ void AAmongUsPlayerController::ToggleQuitMenu()
 			{
 				QuitButton->OnClicked.AddDynamic(this, &AAmongUsPlayerController::QuitGameClient);
 			}
-			UE_LOG(LogTemp, Warning, TEXT("ToggleQuitMenu: QuitMenuWidgetInstance créé avec succès"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Impossible de créer QuitMenuWidgetInstance"));
-			return;
 		}
 	}
+
+	if (!QuitMenuWidgetInstance) return;
 
 	bool bIsVisible = QuitMenuWidgetInstance->IsVisible();
 	QuitMenuWidgetInstance->SetVisibility(bIsVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
@@ -122,104 +136,15 @@ void AAmongUsPlayerController::ToggleQuitMenu()
 	if (!bIsVisible)
 	{
 		QuitMenuWidgetInstance->AddToViewport(10);
-
-		// === Affiche le curseur et change l'input mode ===
 		bShowMouseCursor = true;
 		SetInputMode(FInputModeUIOnly());
 	}
 	else
 	{
-		// === Masque le curseur et repasse en input jeu ===
 		bShowMouseCursor = false;
 		SetInputMode(FInputModeGameOnly());
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("ToggleQuitMenu: Widget %s"), bIsVisible ? TEXT("masqué") : TEXT("affiché"));
 }
-void AAmongUsPlayerController::EnterSpectatorMode()
-{
-
-	if (GetPawn())
-	{
-		UnPossess(); 
-	}
-
-	ChangeState(NAME_Spectating);
-
-	SpectateNextPlayer();
-    
-	UE_LOG(LogTemp, Warning, TEXT("Mode Spectateur Activé !"));
-}
-
-void AAmongUsPlayerController::SpectateNextPlayer()
-{
-	if (!IsInState(NAME_Spectating)) return;
-
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	AGameStateBase* GS = World->GetGameState();
-	if (!GS) return;
-
-	// On parcourt la liste des joueurs pour trouver le prochain vivant
-	TArray<APlayerState*> PlayerArray = GS->PlayerArray;
-	int32 NumPlayers = PlayerArray.Num();
-    
-	// Sécurité pour éviter boucle infinie si tout le monde est mort
-	int32 Attempts = 0; 
-    
-	while (Attempts < NumPlayers)
-	{
-		SpectatedPlayerIndex = (SpectatedPlayerIndex + 1) % NumPlayers;
-		AAmongUsPlayerState* PS = Cast<AAmongUsPlayerState>(PlayerArray[SpectatedPlayerIndex]);
-
-		// Si le joueur est valide, n'est pas nous-même, et est vivant (ou un rôle spécifique)
-		if (PS && PS != PlayerState && PS->GetPlayerRole() != EPlayerRole::Mort && PS->GetPawn())
-		{
-			SetViewTargetWithBlend(PS->GetPawn(), 0.5f, VTBlend_Cubic);
-			UE_LOG(LogTemp, Warning, TEXT("Spectating: %s"), *PS->GetPlayerName());
-			return;
-		}
-		Attempts++;
-	}
-}
-
-void AAmongUsPlayerController::SpectatePreviousPlayer()
-{
-	if (!IsInState(NAME_Spectating)) return;
-
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	AGameStateBase* GS = World->GetGameState();
-	if (!GS) return;
-
-	TArray<APlayerState*> PlayerArray = GS->PlayerArray;
-	int32 NumPlayers = PlayerArray.Num();
-    
-	if (NumPlayers == 0) return;
-
-	int32 Attempts = 0; 
-	
-	while (Attempts < NumPlayers)
-	{
-
-		SpectatedPlayerIndex = (SpectatedPlayerIndex - 1 + NumPlayers) % NumPlayers;
-
-		AAmongUsPlayerState* PS = Cast<AAmongUsPlayerState>(PlayerArray[SpectatedPlayerIndex]);
-
-		if (PS && PS != PlayerState && PS->GetPlayerRole() != EPlayerRole::Mort && PS->GetPawn())
-		{
-			SetViewTargetWithBlend(PS->GetPawn(), 0.5f, VTBlend_Cubic);
-			UE_LOG(LogTemp, Warning, TEXT("Spectating Previous: %s"), *PS->GetPlayerName());
-			return;
-		}
-
-		Attempts++;
-	}
-}
-
-
 
 // === NETWORK CLOCK ===
 float AAmongUsPlayerController::GetServerWorldTimeDelta() const

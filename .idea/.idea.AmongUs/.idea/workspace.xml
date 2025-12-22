@@ -16,12 +16,17 @@
   <component name="ChangeListManager">
     <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_AmongsUsPlayerController.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_AmongsUsPlayerController.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/BluePrints/BP_ThirdPersonCharacter.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/BP_ThirdPersonCharacter.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/BluePrints/Task/BP_Code.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/Task/BP_Code.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/BluePrints/Task/BP_Jauge.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/BluePrints/Task/BP_Jauge.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/WB_Motdepasse.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/WB_Motdepasse.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUs.Build.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUs.Build.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/Bouton.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/Bouton.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" afterDir="false" />
     </list>
@@ -291,6 +296,9 @@
       <workItem from="1766337955670" duration="56000" />
       <workItem from="1766362432074" duration="1173000" />
       <workItem from="1766398951415" duration="10926000" />
+      <workItem from="1766421140958" duration="2008000" />
+      <workItem from="1766423247616" duration="1357000" />
+      <workItem from="1766424696655" duration="2396000" />
     </task>
     <servers />
   </component>

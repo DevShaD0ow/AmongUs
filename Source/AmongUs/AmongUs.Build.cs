@@ -18,7 +18,10 @@ public class AmongUs : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"OnlineSubsystem",
+			"OnlineSubsystemUtils",
+			"OnlineToolbox"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AITestSuite" });
