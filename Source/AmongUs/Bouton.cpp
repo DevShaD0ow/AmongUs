@@ -5,6 +5,7 @@
 #include "AmongUsGameState.h"
 #include "Engine/StaticMesh.h"
 #include "AmongUs.h"
+#include "Components/PointLightComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 ABouton::ABouton()
@@ -30,6 +31,15 @@ ABouton::ABouton()
 	}
 
 	InteractionDistance = 200.f;
+
+	// CRÉATION DE LA LUMIÈRE
+	LightComp = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightComp"));
+	LightComp->SetupAttachment(RootComponent);
+    
+	LightComp->SetLightColor(FLinearColor(1.0f, 0.8f, 0.2f)); 
+	LightComp->SetIntensity(5000.0f); 
+	LightComp->SetAttenuationRadius(300.0f);
+	LightComp->SetVisibility(false);
 }
 
 void ABouton::BeginPlay()
@@ -44,16 +54,30 @@ void ABouton::Tick(float DeltaTime)
 
 void ABouton::IncrementTaskServerOnly_Implementation(AAmongUsPlayerState* PlayerState)
 {
-	// Appel de la logique serveur
 	Interact(PlayerState);
 }
+
+
 void ABouton::SetHighlight(bool bActive)
 {
+	// Méthode 1 : La lumière (Facile et joli)
+	if (LightComp)
+	{
+		LightComp->SetVisibility(bActive);
+	}
 	if (MeshComp)
 	{
-		MeshComp->SetRenderCustomDepth(bActive);
-		// On peut aussi changer une valeur de stencil si vous utilisez un shader complexe
-		MeshComp->SetCustomDepthStencilValue(bActive ? 250 : 0); 
+		UMaterialInstanceDynamic* DynMat = Cast<UMaterialInstanceDynamic>(MeshComp->GetMaterial(0));
+		if (!DynMat)
+		{
+			DynMat = MeshComp->CreateDynamicMaterialInstance(0);
+		}
+
+		if (DynMat)
+		{
+			FLinearColor TargetColor = bActive ? FLinearColor::Green : FLinearColor::White;
+			DynMat->SetVectorParameterValue(FName("Color"), TargetColor);
+		}
 	}
 }
 

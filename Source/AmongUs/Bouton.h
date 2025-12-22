@@ -32,6 +32,10 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComp;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UPointLightComponent* LightComp;
+	
 	void SetHighlight(bool bActive);
 
 	// --- Interaction Logic ---
