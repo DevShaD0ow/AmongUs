@@ -27,6 +27,29 @@ enum class EPlayerColor : uint8
 	Pink UMETA(DisplayName = "Pink")
 };
 
+USTRUCT(BlueprintType)
+struct FAmongUsTask
+{
+	GENERATED_BODY()
+
+	// L'ID unique (ex: "Wiring_Electrical"). Doit être identique sur le Bouton et dans le Widget.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName TaskID;
+
+	// Le Widget que le joueur doit réussir (ex: WBP_Wiring)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> TaskWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsCompleted = false;
+
+	// Pour comparer deux tâches facilement
+	bool operator==(const FAmongUsTask& Other) const
+	{
+		return TaskID == Other.TaskID;
+	}
+};
+
 // Classe PlayerState spécifique pour Among Us
 UCLASS()
 class AMONGUS_API AAmongUsPlayerState : public APlayerState
@@ -42,6 +65,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Role")
 	EPlayerRole GetPlayerRole() const;
 
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Tasks")
+	TArray<FAmongUsTask> AssignedTasks;
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void ServerMarkTaskFinished(FName TaskID);
+	
 	// Réplication
 	UFUNCTION()
 	void OnRep_PlayerRole();

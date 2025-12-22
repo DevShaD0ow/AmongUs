@@ -129,6 +129,7 @@ public:
 
     /** Tente d’interagir avec un bouton proche (appelé côté client) */
     void TryInteract();
+    void OpenTaskWidget(ABouton* Btn);
 
     // ==========================
     // Properties

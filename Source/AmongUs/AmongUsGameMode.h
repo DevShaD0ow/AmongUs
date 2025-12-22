@@ -25,7 +25,6 @@ public:
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	void AssignRolesOnLevel();
-	void SpawnButtons();
 	void CheckLevelStart(); 
 	FTimerHandle StartCheckTimer;
 

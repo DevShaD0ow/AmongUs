@@ -15,6 +15,7 @@
 #include "AmongUsGameMode.h"
 #include "AmongUsPlayerController.h"
 #include "Bouton.h"
+#include "Blueprint/UserWidget.h"
 
 AAmongUsCharacter::AAmongUsCharacter()
 {
@@ -245,12 +246,15 @@ void AAmongUsCharacter::DoJumpEnd()
 	StopJumping();
 }
 
+// Dans AmongUsCharacter.cpp
+
 void AAmongUsCharacter::TryInteract()
 {
 	FVector PlayerLocation = GetActorLocation();
 	TArray<FHitResult> Hits;
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractionDistance);
 
+	// On scanne autour du joueur
 	bool bHit = GetWorld()->SweepMultiByChannel(Hits, PlayerLocation, PlayerLocation, FQuat::Identity, ECC_Pawn, Sphere);
 
 	if (bHit)
@@ -258,13 +262,16 @@ void AAmongUsCharacter::TryInteract()
 		for (auto& Hit : Hits)
 		{
 			AActor* HitActor = Hit.GetActor();
-			ABouton* Btn = Cast<ABouton>(HitActor);
-			if (Btn)
+			// interact avec task
+			if (ABouton* Btn = Cast<ABouton>(HitActor))
 			{
-				ServerInteractWithButton(Btn);
-				break;
+				// NOUVEAU CODE (Ouvre le Widget) :
+				OpenTaskWidget(Btn);
+             
+				break; 
 			}
-			
+          
+			// Interaction avec le ColorCube (inchangé)
 			if (Cast<AColorCube>(HitActor))
 			{
 				OnOpenColorPicker();
@@ -272,6 +279,58 @@ void AAmongUsCharacter::TryInteract()
 			}
 		}
 	}
+}
+
+void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
+{
+    // Sécurités de base
+    if (!Btn) return;
+    if (!IsLocallyControlled()) return; // Seul le joueur devant son écran doit voir le widget !
+
+    AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
+    if (!PS) return;
+
+    // On parcourt la liste des tâches assignées à ce joueur
+    for (const FAmongUsTask& Task : PS->AssignedTasks)
+    {
+        // VERIFICATION : Est-ce que ce bouton correspond à une tâche de ma liste ?
+        // ET est-ce que la tâche n'est pas déjà finie ?
+        if (Task.TaskID == Btn->TaskIDRef && !Task.bIsCompleted)
+        {
+            // C'est le bon bouton ! On prépare l'ouverture du Widget.
+
+            // Priorité : On prend le widget défini dans la Tâche, sinon celui du Bouton
+            TSubclassOf<UUserWidget> WidgetClassToSpawn = Task.TaskWidgetClass;
+            if (!WidgetClassToSpawn) WidgetClassToSpawn = Btn->TaskWidgetToOpen;
+
+            if (WidgetClassToSpawn)
+            {
+                APlayerController* PC = Cast<APlayerController>(GetController());
+                if (PC)
+                {
+                    // 1. Création du Widget
+                    UUserWidget* TaskWidget = CreateWidget<UUserWidget>(PC, WidgetClassToSpawn);
+                    
+                    if (TaskWidget)
+                    {
+                        // 2. Affichage
+                        TaskWidget->AddToViewport();
+
+                        // 3. Configuration de la souris et du focus
+                        FInputModeUIOnly InputMode;
+                        InputMode.SetWidgetToFocus(TaskWidget->TakeWidget());
+                        PC->SetInputMode(InputMode);
+                        PC->bShowMouseCursor = true;
+
+                        // ASTUCE : Si votre Widget a une variable "TaskID" exposée, c'est le moment de la set !
+                        // Comme on est en C++ générique, on ne peut pas accéder directement à vos variables Blueprint.
+                        // Mais le Widget saura quel ID renvoyer car vous l'avez hardcodé dedans ou via le Bouton.
+                    }
+                }
+            }
+            return;
+        }
+    }
 }
 
 void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)

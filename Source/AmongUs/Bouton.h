@@ -22,6 +22,13 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task Config")
+	FName TaskIDRef;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task Config")
+	TSubclassOf<UUserWidget> TaskWidgetToOpen;
+
+	
 	// Zone de collision pour détecter les joueurs proches
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereComp;
