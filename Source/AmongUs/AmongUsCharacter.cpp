@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "AmongUsCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -17,6 +15,8 @@
 #include "Bouton.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+
+DEFINE_LOG_CATEGORY(LogAmongUsCharacter);
 
 AAmongUsCharacter::AAmongUsCharacter()
 {
@@ -54,7 +54,6 @@ void AAmongUsCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 1. On mémorise tous les boutons UNE SEULE FOIS au début
 	TArray<AActor*> Actors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABouton::StaticClass(), Actors);
     
@@ -65,27 +64,22 @@ void AAmongUsCharacter::BeginPlay()
 			CachedButtons.Add(Btn);
 		}
 	}
-
-	// 2. On lance une première mise à jour (au cas où les tâches sont déjà là)
 	UpdateTaskHighlights();
-}
-
-void AAmongUsCharacter::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
-	if (PS)
-	{
-		ApplyColorToSkin(PS->PlayerColor);
-		UE_LOG(LogTemp, Warning, TEXT("Client : PlayerState reçu ! Couleur appliquée : %d"), (int32)PS->PlayerColor);
-	}
 }
 
 void AAmongUsCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
-	if (PS)
+	if (AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>())
+	{
+		ApplyColorToSkin(PS->PlayerColor);
+	}
+}
+
+void AAmongUsCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	if (AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>())
 	{
 		ApplyColorToSkin(PS->PlayerColor);
 	}
@@ -93,22 +87,14 @@ void AAmongUsCharacter::PossessedBy(AController* NewController)
 
 void AAmongUsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
+    {
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Move);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
-
-		//Firing
-		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AAmongUsCharacter::Fire);
-		
-		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAmongUsCharacter::Look);
-
+		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AAmongUsCharacter::Fire);
 	}
 }
 
@@ -130,11 +116,8 @@ void AAmongUsCharacter::DoMove(float Right, float Forward)
 	{
 		const FRotator Rotation = GetController()->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		AddMovementInput(ForwardDirection, Forward);
-		AddMovementInput(RightDirection, Right);
+		AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X), Forward);
+		AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y), Right);
 	}
 }
 
@@ -147,116 +130,6 @@ void AAmongUsCharacter::DoLook(float Yaw, float Pitch)
 	}
 }
 
-void AAmongUsCharacter::Fire()
-{
-	UWorld* World = GetWorld();
-	if (!World || !IsLocallyControlled()) return;
-
-	if (World->GetMapName().EndsWith("Lobby"))return; 
-	
-
-	AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
-	if (!MyPS || MyPS->GetPlayerRole() != EPlayerRole::Mechant)return;
-	
-
-    FVector StartLocation = FollowCamera->GetComponentLocation();
-    FRotator CameraRotation = FollowCamera->GetComponentRotation();
-    FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f);
-
-    FHitResult HitResult;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-
-    bool bHit = World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, Params);
-
-    AAmongUsPlayerState* TargetPS = nullptr;
-    if (bHit)
-    {
-        if (AAmongUsCharacter* HitCharacter = Cast<AAmongUsCharacter>(HitResult.GetActor()))
-        	TargetPS = HitCharacter->GetPlayerState<AAmongUsPlayerState>();
-        
-    }
-    if (TargetPS)
-    {
-        AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetController());
-        float EstimatedServerTime = PC ? PC->GetServerWorldTime() : World->GetTimeSeconds();
-        
-        ServerConfirmHit(EstimatedServerTime, StartLocation, CameraRotation, TargetPS);
-        UE_LOG(LogTemp, Warning, TEXT("Client Fire: Hit %s, Sending RPC @ %.3f"), 
-            *TargetPS->GetPlayerName(), EstimatedServerTime);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Client Fire: Missed."));
-    }
-}
-
-void AAmongUsCharacter::ServerConfirmHit_Implementation(
-    float ClientTimestamp,
-    const FVector& StartLocation,
-    const FRotator& Rotation,
-    APlayerState* TargetPlayerState)
-{
-    UWorld* World = GetWorld();
-    if (!World) return;
-    
-	float ServerTime = World->GetTimeSeconds();
-	float TimeDifference = FMath::Abs(ServerTime - ClientTimestamp);
-    
-    const float MaxAcceptableTimeDiff = 0.5f;
-    if (TimeDifference > MaxAcceptableTimeDiff)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Server: Time difference too large (%.3fs), rejecting shot"), TimeDifference);
-        return;
-    }
-    float RewindTime = ClientTimestamp;
-
-    if (!TargetPlayerState)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Server: Rewind Hit Denied! No TargetPlayerState"));
-        return;
-    }
-
-    AAmongUsPlayerState* ShooterPS = GetPlayerState<AAmongUsPlayerState>();
-    if (!ShooterPS)return;
-    
-
-    UE_LOG(LogTemp, Warning, TEXT("Server: Tireur=%s vise Target=%s à t=%.3f (Server t=%.3f, diff=%.3fms)"), 
-        *ShooterPS->GetPlayerName(), 
-        *TargetPlayerState->GetPlayerName(), 
-        RewindTime,
-        ServerTime,
-        TimeDifference * 1000.f);
-
-    AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState);
-    if (!TargetAmongUsPS)return;
-	
-    AAmongUsCharacter* TargetCharacter = Cast<AAmongUsCharacter>(TargetAmongUsPS->GetPawn());
-    if (!TargetCharacter || !TargetCharacter->RewindCapsule) return;
-	
-    if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
-    {
-        if (RewindSubsystem->VerifyHit(RewindTime, StartLocation, Rotation, TargetAmongUsPS, ShooterPS))
-        {
-            UE_LOG(LogTemp, Warning, TEXT("✅ Server: Rewind Hit CONFIRMED! %s a touché %s"), 
-                *ShooterPS->GetPlayerName(), *TargetAmongUsPS->GetPlayerName());
-            
-        	TargetCharacter->MulticastTriggerDeath();
-        	TargetAmongUsPS->SetPlayerRole(EPlayerRole::Mort);
-
-        	if (AAmongUsGameMode* GM = Cast<AAmongUsGameMode>(GetWorld()->GetAuthGameMode()))
-        	{
-        		GM->CheckWinCondition();
-        	}
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("❌ Server: Rewind Hit DENIED!"));
-        }
-    }
-}
-
-
 void AAmongUsCharacter::DoJumpStart()
 {
 	Jump();
@@ -267,15 +140,12 @@ void AAmongUsCharacter::DoJumpEnd()
 	StopJumping();
 }
 
-// Dans AmongUsCharacter.cpp
-
 void AAmongUsCharacter::TryInteract()
 {
 	FVector PlayerLocation = GetActorLocation();
 	TArray<FHitResult> Hits;
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractionDistance);
 
-	// On scanne autour du joueur
 	bool bHit = GetWorld()->SweepMultiByChannel(Hits, PlayerLocation, PlayerLocation, FQuat::Identity, ECC_Pawn, Sphere);
 
 	if (bHit)
@@ -283,16 +153,12 @@ void AAmongUsCharacter::TryInteract()
 		for (auto& Hit : Hits)
 		{
 			AActor* HitActor = Hit.GetActor();
-			// interact avec task
+			
 			if (ABouton* Btn = Cast<ABouton>(HitActor))
 			{
-				// NOUVEAU CODE (Ouvre le Widget) :
 				OpenTaskWidget(Btn);
-             
 				break; 
 			}
-          
-			// Interaction avec le ColorCube (inchangé)
 			if (Cast<AColorCube>(HitActor))
 			{
 				OnOpenColorPicker();
@@ -304,13 +170,10 @@ void AAmongUsCharacter::TryInteract()
 
 void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
 {
-    // Sécurités de base
-    if (!Btn) return;
-    if (!IsLocallyControlled()) return; 
+    if (!Btn || !IsLocallyControlled()) return; 
 
     AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
     if (!PS) return;
-
 
     for (const FAmongUsTask& Task : PS->AssignedTasks)
     {
@@ -323,20 +186,12 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
 
                 if (WidgetClassToSpawn)
                 {
-                    APlayerController* PC = Cast<APlayerController>(GetController());
-                    if (PC)
+                    if (APlayerController* PC = Cast<APlayerController>(GetController()))
                     {
                         UUserWidget* TaskWidget = CreateWidget<UUserWidget>(PC, WidgetClassToSpawn);
                         if (TaskWidget)
                         {
-                            // Si vous utilisez la classe de base suggérée précédemment pour passer l'ID :
-                            // if (UAmongUsTaskBase* TaskBase = Cast<UAmongUsTaskBase>(TaskWidget))
-                            // {
-                            //     TaskBase->CurrentTaskID = Task.TaskID;
-                            // }
-
                             TaskWidget->AddToViewport();
-
                             FInputModeUIOnly InputMode;
                             InputMode.SetWidgetToFocus(TaskWidget->TakeWidget());
                             PC->SetInputMode(InputMode);
@@ -347,55 +202,34 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
             }
             else
             {
-                // Le joueur essaie d'ouvrir une tâche future ou une tâche qu'il n'a pas
-                UE_LOG(LogTemp, Warning, TEXT("Ordre incorrect ! Tâche active : %s | Bouton touché : %s"), 
-                    *Task.TaskID.ToString(), *Btn->TaskIDRef.ToString());
-                
-                // Optionnel : Afficher un message à l'écran "Terminez d'abord la tâche précédente"
+                UE_LOG(LogAmongUsCharacter, Warning, TEXT("Ordre incorrect ! Tâche active : %s"), *Task.TaskID.ToString());
             }
-
-            // CRUCIAL : On return ici pour ne pas vérifier les tâches suivantes.
-            // Cela empêche le joueur de "sauter" des étapes.
             return; 
         }
     }
-    
-    // Si on arrive ici, c'est que toutes les tâches sont finies (Completed = true partout)
-    UE_LOG(LogTemp, Warning, TEXT("Toutes les tâches sont déjà terminées !"));
 }
 
 void AAmongUsCharacter::UpdateTaskHighlights()
 {
-	// Sécurité : Si on n'est pas le joueur local, on ne touche pas aux graphismes
 	if (!IsLocallyControlled()) return;
 
 	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
 	if (!PS) return;
 
-	// 1. Trouver l'ID de la prochaine tâche
 	FName TargetTaskID = NAME_None;
 	for (const FAmongUsTask& Task : PS->AssignedTasks)
 	{
 		if (!Task.bIsCompleted)
 		{
 			TargetTaskID = Task.TaskID;
-			break; // On s'arrête à la première trouvée (Ordre strict)
+			break; 
 		}
 	}
 
-	// 2. Allumer le bon bouton, éteindre les autres
 	for (ABouton* Btn : CachedButtons)
 	{
 		if (!Btn) continue;
-
-		if (TargetTaskID != NAME_None && Btn->TaskIDRef == TargetTaskID)
-		{
-			Btn->SetHighlight(true); // Allumer
-		}
-		else
-		{
-			Btn->SetHighlight(false); // Éteindre
-		}
+		Btn->SetHighlight(TargetTaskID != NAME_None && Btn->TaskIDRef == TargetTaskID);
 	}
 }
 
@@ -403,56 +237,29 @@ void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)
 {
 	if (Btn)
 	{
-		AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
-		if (MyPS)
+		if (AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>())
 		{
 			Btn->IncrementTaskServerOnly(MyPS); 
 		}
 	}
 }
 
-void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
-{
-	// 1. Désactiver le contrôle de mouvement (très important pour le client local)
-	GetCharacterMovement()->StopMovementImmediately();
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->SetComponentTickEnabled(false);
-
-	// 2. Désactiver la capsule de collision (pour ne pas que le corps rebondisse dessus)
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	// 3. Activer le Ragdoll sur le Mesh
-	if (GetMesh())
-	{
-		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-		GetMesh()->SetSimulatePhysics(true);
-        
-		// Petit boost pour faire tomber le corps de façon plus naturelle
-		GetMesh()->AddImpulse(FVector(0, 0, -100.f), NAME_None, true); 
-	}
-}
 void AAmongUsCharacter::ApplyColorToSkin(EPlayerColor Color)
 {
 	USkeletalMeshComponent* MyMesh = GetMesh();
 	if (!MyMesh) return;
 
-	const int32 MaterialIndex = 0; 
-
-	// Créer un Material Instance Dynamic (MID) si ce n'est pas déjà fait
-	// Cela permet de changer les paramètres sans changer le fichier asset d'origine
-	UMaterialInterface* CurrentMat = MyMesh->GetMaterial(MaterialIndex);
+	UMaterialInterface* CurrentMat = MyMesh->GetMaterial(0);
 	UMaterialInstanceDynamic* DynMat = Cast<UMaterialInstanceDynamic>(CurrentMat);
 
 	if (!DynMat)
 	{
-		DynMat = MyMesh->CreateDynamicMaterialInstance(MaterialIndex);
+		DynMat = MyMesh->CreateDynamicMaterialInstance(0);
 	}
 
 	if (DynMat)
 	{
-		FLinearColor SelectedColor = GetLinearColorFromEnum(Color);
-		// "PlayerColor" doit être EXACTEMENT le nom du paramètre dans M_PlayerColor
-		DynMat->SetVectorParameterValue(FName("PlayerColor"), SelectedColor);
+		DynMat->SetVectorParameterValue(FName("PlayerColor"), GetLinearColorFromEnum(Color));
 	}
 }
 
@@ -469,5 +276,83 @@ FLinearColor AAmongUsCharacter::GetLinearColorFromEnum(EPlayerColor Color)
 	case EPlayerColor::Orange: return FLinearColor(1.0f, 0.5f, 0.0f);
 	case EPlayerColor::Pink: return FLinearColor(1.0f, 0.07f, 0.57f);
 	default: return FLinearColor::White;
+	}
+}
+
+void AAmongUsCharacter::Fire()
+{
+	UWorld* World = GetWorld();
+	if (!World || !IsLocallyControlled()) return;
+	if (World->GetMapName().EndsWith("Lobby")) return; 
+	
+	AAmongUsPlayerState* MyPS = GetPlayerState<AAmongUsPlayerState>();
+	if (!MyPS || MyPS->GetPlayerRole() != EPlayerRole::Mechant) return;
+
+    FVector StartLocation = FollowCamera->GetComponentLocation();
+    FRotator CameraRotation = FollowCamera->GetComponentRotation();
+    FVector EndLocation = StartLocation + (CameraRotation.Vector() * 100000.f);
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    bool bHit = World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, Params);
+
+    AAmongUsPlayerState* TargetPS = nullptr;
+    if (bHit)
+    {
+        if (AAmongUsCharacter* HitCharacter = Cast<AAmongUsCharacter>(HitResult.GetActor()))
+        	TargetPS = HitCharacter->GetPlayerState<AAmongUsPlayerState>();
+    }
+
+    if (TargetPS)
+    {
+        AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetController());
+        float EstimatedServerTime = PC ? PC->GetServerWorldTime() : World->GetTimeSeconds();
+        ServerConfirmHit(EstimatedServerTime, StartLocation, CameraRotation, TargetPS);
+    }
+}
+
+void AAmongUsCharacter::ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState)
+{
+    UWorld* World = GetWorld();
+    if (!World || !TargetPlayerState) return;
+    
+	float ServerTime = World->GetTimeSeconds();
+	if (FMath::Abs(ServerTime - ClientTimestamp) > 0.5f) return;
+
+    AAmongUsPlayerState* TargetAmongUsPS = Cast<AAmongUsPlayerState>(TargetPlayerState);
+    AAmongUsCharacter* TargetCharacter = TargetAmongUsPS ? Cast<AAmongUsCharacter>(TargetAmongUsPS->GetPawn()) : nullptr;
+    AAmongUsPlayerState* ShooterPS = GetPlayerState<AAmongUsPlayerState>();
+
+    if (!TargetCharacter || !TargetCharacter->RewindCapsule || !ShooterPS) return;
+	
+    if (URewindSubsystem* RewindSubsystem = World->GetSubsystem<URewindSubsystem>())
+    {
+        if (RewindSubsystem->VerifyHit(ClientTimestamp, StartLocation, Rotation, TargetAmongUsPS, ShooterPS))
+        {
+        	TargetCharacter->MulticastTriggerDeath();
+        	TargetAmongUsPS->SetPlayerRole(EPlayerRole::Mort);
+
+        	if (AAmongUsGameMode* GM = Cast<AAmongUsGameMode>(GetWorld()->GetAuthGameMode()))
+        	{
+        		GM->CheckWinCondition();
+        	}
+        }
+    }
+}
+
+void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
+{
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->SetComponentTickEnabled(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->AddImpulse(FVector(0, 0, -100.f), NAME_None, true); 
 	}
 }

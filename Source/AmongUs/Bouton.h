@@ -14,37 +14,36 @@ class AMONGUS_API ABouton : public AActor
 	GENERATED_BODY()
 
 public:
+	// --- Constructor & Ticks ---
 	ABouton();
-
-protected:
-	virtual void BeginPlay() override;
-
-public:
 	virtual void Tick(float DeltaTime) override;
 
+	// --- Task Configuration ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task Config")
 	FName TaskIDRef;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task Config")
 	TSubclassOf<UUserWidget> TaskWidgetToOpen;
 
-	void SetHighlight(bool bActive);
-	// Zone de collision pour détecter les joueurs proches
+	// --- Visuals & Components ---
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereComp;
 
-	// Mesh du bouton
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComp;
 
-	// Distance maximale pour interaction
+	void SetHighlight(bool bActive);
+
+	// --- Interaction Logic ---
 	UPROPERTY(EditAnywhere)
 	float InteractionDistance;
 
-	// Interaction côté serveur
+	virtual void Interact(AAmongUsPlayerState* PlayerState);
+
 	UFUNCTION(Server, Reliable)
 	void IncrementTaskServerOnly(AAmongUsPlayerState* PlayerState);
 
-	// Fonction réelle d’interaction
-	virtual void Interact(AAmongUsPlayerState* PlayerState);
+protected:
+	// --- Lifecycle ---
+	virtual void BeginPlay() override;
 };

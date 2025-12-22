@@ -4,14 +4,33 @@
 #include "AmongUsCharacter.h"
 #include "AmongUsGameMode.h"
 #include "AmongUsGameState.h"
-#include "AmongUsPlayerState.h"
 #include "AmongUsPlayerController.h"
-#include "GameFramework/GameStateBase.h"
 
 AAmongUsPlayerState::AAmongUsPlayerState()
 {
-    PlayerRole = EPlayerRole::Gentil; // Rôle par défaut
-    PlayerColor = EPlayerColor::None; // Initialisation couleur
+    PlayerRole = EPlayerRole::Gentil; 
+    PlayerColor = EPlayerColor::None;
+}
+
+void AAmongUsPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AAmongUsPlayerState, PlayerRole);
+    DOREPLIFETIME(AAmongUsPlayerState, bIsReady); 
+    DOREPLIFETIME(AAmongUsPlayerState, AssignedTasks);
+    DOREPLIFETIME(AAmongUsPlayerState, PlayerColor); 
+}
+
+void AAmongUsPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+    Super::CopyProperties(PlayerState);
+    if (AAmongUsPlayerState* TargetPS = Cast<AAmongUsPlayerState>(PlayerState))
+    {
+        TargetPS->PlayerColor = this->PlayerColor;
+        TargetPS->PlayerRole = this->PlayerRole; 
+        TargetPS->ColorID = this->ColorID;
+        TargetPS->bIsReady = this->bIsReady;
+    }
 }
 
 void AAmongUsPlayerState::SetPlayerRole(EPlayerRole NewRole)
@@ -30,67 +49,36 @@ EPlayerRole AAmongUsPlayerState::GetPlayerRole() const
 
 void AAmongUsPlayerState::OnRep_PlayerRole()
 {
-    const TCHAR* RoleText = (PlayerRole == EPlayerRole::Gentil) ? TEXT("Gentil") :
-                            (PlayerRole == EPlayerRole::Mechant) ? TEXT("Mechant") :
-                            TEXT("Mort");
-    UE_LOG(LogTemp, Warning, TEXT("Le rôle du joueur a changé : %s"), RoleText);
-    
     if (PlayerRole == EPlayerRole::Mort)
     {
-        AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetPlayerController());
-        if (PC && PC->IsLocalController())
+        if (AAmongUsPlayerController* PC = Cast<AAmongUsPlayerController>(GetPlayerController()))
         {
-            PC->EnterSpectatorMode();
+            if (PC->IsLocalController()) PC->EnterSpectatorMode();
         }
-    }
-}
-void AAmongUsPlayerState::CopyProperties(APlayerState* PlayerState)
-{
-    Super::CopyProperties(PlayerState);
-
-    AAmongUsPlayerState* TargetPS = Cast<AAmongUsPlayerState>(PlayerState);
-    if (TargetPS)
-    {
-        TargetPS->PlayerColor = this->PlayerColor;
-        TargetPS->PlayerRole = this->PlayerRole; 
-        
-        TargetPS->ColorID = this->ColorID;
-        TargetPS->bIsReady = this->bIsReady;
     }
 }
 
 void AAmongUsPlayerState::ServerRequestColor_Implementation(EPlayerColor RequestedColor)
 {
     AAmongUsGameState* GameState = Cast<AAmongUsGameState>(GetWorld()->GetGameState());
-    
     if (GameState)
     {
         for (APlayerState* PS : GameState->PlayerArray)
         {
             AAmongUsPlayerState* OtherPS = Cast<AAmongUsPlayerState>(PS);
-            // On vérifie si un autre joueur a déjà cette couleur
-            if (OtherPS && OtherPS != this && OtherPS->PlayerColor == RequestedColor)
-            {
-                return;
-            }
+            if (OtherPS && OtherPS != this && OtherPS->PlayerColor == RequestedColor) return;
         }
     }
-
-    // 2. Si libre, on l'attribue
     PlayerColor = RequestedColor;
-    
-    // 3. On force la mise à jour sur le serveur aussi (pour que le serveur voie sa propre couleur)
     OnRep_PlayerColor();
 }
 
 void AAmongUsPlayerState::OnRep_PlayerColor()
 {
-    // Appliquer la couleur au Pawn possédé par ce PlayerState
     if (APawn* MyPawn = GetPawn())
     {
         if (AAmongUsCharacter* MyChar = Cast<AAmongUsCharacter>(MyPawn))
         {
-            // Assure-toi que cette fonction existe bien dans AmongUsCharacter (voir étape précédente)
             MyChar->ApplyColorToSkin(PlayerColor);
         }
     }
@@ -105,7 +93,6 @@ void AAmongUsPlayerState::ServerMarkTaskFinished_Implementation(FName TaskID)
             if (!Task.bIsCompleted)
             {
                 Task.bIsCompleted = true; 
-                
                 if (AAmongUsGameState* GS = GetWorld()->GetGameState<AAmongUsGameState>())
                 {
                     GS->ServerModifyNbtache(this); 
@@ -116,34 +103,21 @@ void AAmongUsPlayerState::ServerMarkTaskFinished_Implementation(FName TaskID)
         }
     }
 }
+
 void AAmongUsPlayerState::OnRep_AssignedTasks()
 {
-    // On récupère notre pion (le personnage physique)
     if (APawn* MyPawn = GetPawn())
     {
         if (AAmongUsCharacter* MyChar = Cast<AAmongUsCharacter>(MyPawn))
         {
-            // On lui demande de mettre à jour ses lumières MAINTENANT
             MyChar->UpdateTaskHighlights();
         }
     }
 }
 
-void AAmongUsPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    
-    DOREPLIFETIME(AAmongUsPlayerState, PlayerRole);
-    DOREPLIFETIME(AAmongUsPlayerState, bIsReady); 
-    DOREPLIFETIME(AAmongUsPlayerState, AssignedTasks);
-    DOREPLIFETIME(AAmongUsPlayerState, PlayerColor); 
-}
-
 void AAmongUsPlayerState::ServerSetReady_Implementation(bool bReady)
 {
     bIsReady = bReady;
-    
-    // Quand un joueur change son état, on demande au GameMode de vérifier si tout le monde est prêt
     if (AAmongUsGameMode* GM = Cast<AAmongUsGameMode>(GetWorld()->GetAuthGameMode()))
     {
         GM->CheckAllPlayersReady();

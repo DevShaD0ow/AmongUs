@@ -16,14 +16,12 @@
   <component name="ChangeListManager">
     <list default="true" id="fb93012a-5086-4075-bc01-e3f4fe631db3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AmongUs/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/WBP_ColorPicker.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/WBP_ColorPicker.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsCharacter.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsGameMode.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/AmongUsPlayerState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/AmongUs/Bouton.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/Bouton.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/AmongUs/Bouton.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -291,7 +289,7 @@
       <workItem from="1765997416624" duration="10777000" />
       <workItem from="1766337955670" duration="56000" />
       <workItem from="1766362432074" duration="1173000" />
-      <workItem from="1766398951415" duration="8501000" />
+      <workItem from="1766398951415" duration="9137000" />
     </task>
     <servers />
   </component>

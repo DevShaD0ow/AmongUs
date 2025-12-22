@@ -5,105 +5,103 @@
 #include "Net/UnrealNetwork.h"
 #include "AmongUsPlayerState.generated.h"
 
-// Définition des rôles des joueurs
+// --- Enums & Structs ---
 UENUM(BlueprintType)
 enum class EPlayerRole : uint8
 {
-	Gentil UMETA(DisplayName = "Gentil"),
-	Mechant UMETA(DisplayName = "Méchant"),
-	Mort UMETA(DisplayName = "Mort")
+    Gentil UMETA(DisplayName = "Gentil"),
+    Mechant UMETA(DisplayName = "Méchant"),
+    Mort UMETA(DisplayName = "Mort")
 };
+
 UENUM(BlueprintType)
 enum class EPlayerColor : uint8
 {
-	None UMETA(DisplayName = "None"),
-	Red UMETA(DisplayName = "Red"),
-	Blue UMETA(DisplayName = "Blue"),
-	Green UMETA(DisplayName = "Green"),
-	Yellow UMETA(DisplayName = "Yellow"),
-	Purple UMETA(DisplayName = "Purple"),
-	Cyan UMETA(DisplayName = "Cyan"),
-	Orange UMETA(DisplayName = "Orange"),
-	Pink UMETA(DisplayName = "Pink")
+    None UMETA(DisplayName = "None"),
+    Red UMETA(DisplayName = "Red"),
+    Blue UMETA(DisplayName = "Blue"),
+    Green UMETA(DisplayName = "Green"),
+    Yellow UMETA(DisplayName = "Yellow"),
+    Purple UMETA(DisplayName = "Purple"),
+    Cyan UMETA(DisplayName = "Cyan"),
+    Orange UMETA(DisplayName = "Orange"),
+    Pink UMETA(DisplayName = "Pink")
 };
 
 USTRUCT(BlueprintType)
 struct FAmongUsTask
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	// L'ID unique (ex: "Wiring_Electrical"). Doit être identique sur le Bouton et dans le Widget.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName TaskID;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName TaskID;
 
-	// Le Widget que le joueur doit réussir (ex: WBP_Wiring)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UUserWidget> TaskWidgetClass;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<UUserWidget> TaskWidgetClass;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsCompleted = false;
+    UPROPERTY(BlueprintReadOnly)
+    bool bIsCompleted = false;
 
-	// Pour comparer deux tâches facilement
-	bool operator==(const FAmongUsTask& Other) const
-	{
-		return TaskID == Other.TaskID;
-	}
+    bool operator==(const FAmongUsTask& Other) const
+    {
+        return TaskID == Other.TaskID;
+    }
 };
 
-// Classe PlayerState spécifique pour Among Us
 UCLASS()
 class AMONGUS_API AAmongUsPlayerState : public APlayerState
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AAmongUsPlayerState();
-	// Getters et setters pour le rôle
-	UFUNCTION(BlueprintCallable, Category = "Role")
-	void SetPlayerRole(EPlayerRole NewRole);
+    // --- Constructor & Lifecycle ---
+    AAmongUsPlayerState();
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION(BlueprintCallable, Category = "Role")
-	EPlayerRole GetPlayerRole() const;
+    // --- Roles Management ---
+    UFUNCTION(BlueprintCallable, Category = "Role")
+    void SetPlayerRole(EPlayerRole NewRole);
 
-	UPROPERTY(ReplicatedUsing = OnRep_AssignedTasks, BlueprintReadOnly, Category = "Tasks")
-	TArray<FAmongUsTask> AssignedTasks;
+    UFUNCTION(BlueprintCallable, Category = "Role")
+    EPlayerRole GetPlayerRole() const;
 
-	// 2. Ajoutez cette fonction juste en dessous
-	UFUNCTION()
-	void OnRep_AssignedTasks();
+    // --- Tasks System ---
+    UFUNCTION(BlueprintCallable, Server, Reliable)
+    void ServerMarkTaskFinished(FName TaskID);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void ServerMarkTaskFinished(FName TaskID);
-	
-	// Réplication
-	UFUNCTION()
-	void OnRep_PlayerRole();
+    UPROPERTY(ReplicatedUsing = OnRep_AssignedTasks, BlueprintReadOnly, Category = "Tasks")
+    TArray<FAmongUsTask> AssignedTasks;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	UPROPERTY(Replicated,BlueprintReadWrite)int32 ColorID;
-	UPROPERTY(Replicated, BlueprintReadWrite)
-	bool bIsReady = false;
+    UFUNCTION()
+    void OnRep_AssignedTasks();
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void ServerSetReady(bool bReady);
-	// Couleur
-	// Variable répliquée (Le serveur l'envoie à tout le monde)
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, BlueprintReadOnly, Category = "Color")
-	EPlayerColor PlayerColor;
+    // --- Lobby State & Colors ---
+    UFUNCTION(Server, Reliable, BlueprintCallable)
+    void ServerSetReady(bool bReady);
 
-	// Fonction appelée quand la couleur change
-	UFUNCTION()
-	void OnRep_PlayerColor();
+    UFUNCTION(Server, Reliable, BlueprintCallable)
+    void ServerRequestColor(EPlayerColor RequestedColor);
+    
+    UPROPERTY(Replicated,BlueprintReadWrite)
+    int32 ColorID;
 
-	// Fonction pour demander une couleur au serveur
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void ServerRequestColor(EPlayerColor RequestedColor);
-	
+    UPROPERTY(Replicated, BlueprintReadWrite)
+    bool bIsReady = false;
+
+    UPROPERTY(ReplicatedUsing = OnRep_PlayerColor, BlueprintReadOnly, Category = "Color")
+    EPlayerColor PlayerColor;
+
+    // --- RepNotifies ---
+    UFUNCTION()
+    void OnRep_PlayerColor();
+
+    UFUNCTION()
+    void OnRep_PlayerRole();
+
 protected:
-	// Rôle du joueur
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
-	EPlayerRole PlayerRole;
-	
-	virtual void CopyProperties(APlayerState* PlayerState) override;
-	
+    // --- Internal Properties ---
+    virtual void CopyProperties(APlayerState* PlayerState) override;
+
+    UPROPERTY(ReplicatedUsing = OnRep_PlayerRole, BlueprintReadOnly, Category = "Role")
+    EPlayerRole PlayerRole;
 };
