@@ -73,17 +73,16 @@ void AAmongUsGameMode::InitGame(const FString& MapName, const FString& Options, 
 void AAmongUsGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
+    AssignAvailableColorToPlayer(NewPlayer);
 
     AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
     if (!GS) return;
 
     UWorld* World = GetWorld();
-    if (!World) return;
-    
-    if (World->GetMapName().EndsWith("Lobby"))
+    if (World && World->GetMapName().EndsWith("Lobby"))
     {
         int32 CurrentPlayerCount = GS->PlayerArray.Num();
-        UE_LOG(LogTemp, Warning, TEXT("Lobby : Joueur connecté (%d). En attente du Ready..."), CurrentPlayerCount);
+        UE_LOG(LogTemp, Warning, TEXT("Lobby : Joueur connecté (%d). Couleur attribuée."), CurrentPlayerCount);
         CheckAllPlayersReady();
     }
 }
@@ -142,6 +141,50 @@ void AAmongUsGameMode::ChangeMap()
         FString MapPath = FString::Printf(TEXT("/Game/Maps/Level?listen?ExpectedPlayers=%d"), PlayersToSend);
         World->ServerTravel(MapPath);
     }
+}
+
+void AAmongUsGameMode::AssignAvailableColorToPlayer(APlayerController* NewPlayer)
+{
+    AAmongUsGameState* GS = GetGameState<AAmongUsGameState>();
+    AAmongUsPlayerState* NewPS = NewPlayer->GetPlayerState<AAmongUsPlayerState>();
+    
+    if (!GS || !NewPS) return;
+
+    // On parcourt toutes les couleurs possibles (de Red=1 à Pink=8)
+    // On suppose que votre Enum a 9 éléments (0=None, 1..8=Couleurs)
+    for (uint8 i = 1; i <= 8; i++) 
+    {
+        EPlayerColor CandidateColor = (EPlayerColor)i;
+        bool bIsTaken = false;
+
+        // On vérifie si un autre joueur a DÉJÀ cette couleur
+        for (APlayerState* PS : GS->PlayerArray)
+        {
+            AAmongUsPlayerState* ExistingPS = Cast<AAmongUsPlayerState>(PS);
+            
+            // On ignore le joueur qu'on est en train de configurer
+            if (ExistingPS && ExistingPS != NewPS)
+            {
+                if (ExistingPS->PlayerColor == CandidateColor)
+                {
+                    bIsTaken = true;
+                    break; // Couleur prise, on arrête de vérifier celle-ci
+                }
+            }
+        }
+
+        if (!bIsTaken)
+        {
+            NewPS->PlayerColor = CandidateColor;
+            
+            NewPS->OnRep_PlayerColor(); 
+            
+            UE_LOG(LogTemp, Warning, TEXT("Couleur %d attribuée au joueur %s"), i, *NewPlayer->GetName());
+            return; 
+        }
+    }
+    
+    UE_LOG(LogTemp, Warning, TEXT("Aucune couleur disponible pour %s ! (Lobby plein ?)"), *NewPlayer->GetName());
 }
 
 void AAmongUsGameMode::AssignRolesOnLevel()

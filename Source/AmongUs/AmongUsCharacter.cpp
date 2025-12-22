@@ -16,6 +16,7 @@
 #include "AmongUsPlayerController.h"
 #include "Bouton.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 AAmongUsCharacter::AAmongUsCharacter()
 {
@@ -47,6 +48,26 @@ AAmongUsCharacter::AAmongUsCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+}
+
+void AAmongUsCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// 1. On mémorise tous les boutons UNE SEULE FOIS au début
+	TArray<AActor*> Actors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABouton::StaticClass(), Actors);
+    
+	for (AActor* Actor : Actors)
+	{
+		if (ABouton* Btn = Cast<ABouton>(Actor))
+		{
+			CachedButtons.Add(Btn);
+		}
+	}
+
+	// 2. On lance une première mise à jour (au cas où les tâches sont déjà là)
+	UpdateTaskHighlights();
 }
 
 void AAmongUsCharacter::OnRep_PlayerState()
@@ -285,52 +306,97 @@ void AAmongUsCharacter::OpenTaskWidget(ABouton* Btn)
 {
     // Sécurités de base
     if (!Btn) return;
-    if (!IsLocallyControlled()) return; // Seul le joueur devant son écran doit voir le widget !
+    if (!IsLocallyControlled()) return; 
 
     AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
     if (!PS) return;
 
-    // On parcourt la liste des tâches assignées à ce joueur
+
     for (const FAmongUsTask& Task : PS->AssignedTasks)
     {
-        // VERIFICATION : Est-ce que ce bouton correspond à une tâche de ma liste ?
-        // ET est-ce que la tâche n'est pas déjà finie ?
-        if (Task.TaskID == Btn->TaskIDRef && !Task.bIsCompleted)
+        if (!Task.bIsCompleted)
         {
-            // C'est le bon bouton ! On prépare l'ouverture du Widget.
-
-            // Priorité : On prend le widget défini dans la Tâche, sinon celui du Bouton
-            TSubclassOf<UUserWidget> WidgetClassToSpawn = Task.TaskWidgetClass;
-            if (!WidgetClassToSpawn) WidgetClassToSpawn = Btn->TaskWidgetToOpen;
-
-            if (WidgetClassToSpawn)
+            if (Task.TaskID == Btn->TaskIDRef)
             {
-                APlayerController* PC = Cast<APlayerController>(GetController());
-                if (PC)
+                TSubclassOf<UUserWidget> WidgetClassToSpawn = Task.TaskWidgetClass;
+                if (!WidgetClassToSpawn) WidgetClassToSpawn = Btn->TaskWidgetToOpen;
+
+                if (WidgetClassToSpawn)
                 {
-                    // 1. Création du Widget
-                    UUserWidget* TaskWidget = CreateWidget<UUserWidget>(PC, WidgetClassToSpawn);
-                    
-                    if (TaskWidget)
+                    APlayerController* PC = Cast<APlayerController>(GetController());
+                    if (PC)
                     {
-                        // 2. Affichage
-                        TaskWidget->AddToViewport();
+                        UUserWidget* TaskWidget = CreateWidget<UUserWidget>(PC, WidgetClassToSpawn);
+                        if (TaskWidget)
+                        {
+                            // Si vous utilisez la classe de base suggérée précédemment pour passer l'ID :
+                            // if (UAmongUsTaskBase* TaskBase = Cast<UAmongUsTaskBase>(TaskWidget))
+                            // {
+                            //     TaskBase->CurrentTaskID = Task.TaskID;
+                            // }
 
-                        // 3. Configuration de la souris et du focus
-                        FInputModeUIOnly InputMode;
-                        InputMode.SetWidgetToFocus(TaskWidget->TakeWidget());
-                        PC->SetInputMode(InputMode);
-                        PC->bShowMouseCursor = true;
+                            TaskWidget->AddToViewport();
 
-                        // ASTUCE : Si votre Widget a une variable "TaskID" exposée, c'est le moment de la set !
-                        // Comme on est en C++ générique, on ne peut pas accéder directement à vos variables Blueprint.
-                        // Mais le Widget saura quel ID renvoyer car vous l'avez hardcodé dedans ou via le Bouton.
+                            FInputModeUIOnly InputMode;
+                            InputMode.SetWidgetToFocus(TaskWidget->TakeWidget());
+                            PC->SetInputMode(InputMode);
+                            PC->bShowMouseCursor = true;
+                        }
                     }
                 }
             }
-            return;
+            else
+            {
+                // Le joueur essaie d'ouvrir une tâche future ou une tâche qu'il n'a pas
+                UE_LOG(LogTemp, Warning, TEXT("Ordre incorrect ! Tâche active : %s | Bouton touché : %s"), 
+                    *Task.TaskID.ToString(), *Btn->TaskIDRef.ToString());
+                
+                // Optionnel : Afficher un message à l'écran "Terminez d'abord la tâche précédente"
+            }
+
+            // CRUCIAL : On return ici pour ne pas vérifier les tâches suivantes.
+            // Cela empêche le joueur de "sauter" des étapes.
+            return; 
         }
     }
+    
+    // Si on arrive ici, c'est que toutes les tâches sont finies (Completed = true partout)
+    UE_LOG(LogTemp, Warning, TEXT("Toutes les tâches sont déjà terminées !"));
+}
+
+void AAmongUsCharacter::UpdateTaskHighlights()
+{
+	// Sécurité : Si on n'est pas le joueur local, on ne touche pas aux graphismes
+	if (!IsLocallyControlled()) return;
+
+	AAmongUsPlayerState* PS = GetPlayerState<AAmongUsPlayerState>();
+	if (!PS) return;
+
+	// 1. Trouver l'ID de la prochaine tâche
+	FName TargetTaskID = NAME_None;
+	for (const FAmongUsTask& Task : PS->AssignedTasks)
+	{
+		if (!Task.bIsCompleted)
+		{
+			TargetTaskID = Task.TaskID;
+			break; // On s'arrête à la première trouvée (Ordre strict)
+		}
+	}
+
+	// 2. Allumer le bon bouton, éteindre les autres
+	for (ABouton* Btn : CachedButtons)
+	{
+		if (!Btn) continue;
+
+		if (TargetTaskID != NAME_None && Btn->TaskIDRef == TargetTaskID)
+		{
+			Btn->SetHighlight(true); // Allumer
+		}
+		else
+		{
+			Btn->SetHighlight(false); // Éteindre
+		}
+	}
 }
 
 void AAmongUsCharacter::ServerInteractWithButton_Implementation(ABouton* Btn)

@@ -28,7 +28,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task Config")
 	TSubclassOf<UUserWidget> TaskWidgetToOpen;
 
-	
+	void SetHighlight(bool bActive);
 	// Zone de collision pour détecter les joueurs proches
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereComp;

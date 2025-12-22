@@ -98,33 +98,33 @@ void AAmongUsPlayerState::OnRep_PlayerColor()
 
 void AAmongUsPlayerState::ServerMarkTaskFinished_Implementation(FName TaskID)
 {
-    // 1. On cherche la tâche dans la liste du joueur
     for (FAmongUsTask& Task : AssignedTasks)
     {
-        // Si on trouve l'ID correspondant
         if (Task.TaskID == TaskID)
         {
-            // Sécurité : On vérifie qu'elle n'est pas déjà finie pour éviter de compter 2 fois
             if (!Task.bIsCompleted)
             {
-                Task.bIsCompleted = true; // On valide la tâche pour ce joueur
+                Task.bIsCompleted = true; 
                 
-                // 2. On met à jour le compteur global du GameState
                 if (AAmongUsGameState* GS = GetWorld()->GetGameState<AAmongUsGameState>())
                 {
-                    // On appelle la fonction que vous aviez déjà (ou on décrémente directement)
-                    // Option A : Utiliser votre fonction existante
                     GS->ServerModifyNbtache(this); 
-
-                    // Option B (Plus directe si vous voulez juste baisser le compteur) :
-                    // GS->nbTache--;
-                    // if (AAmongUsGameMode* GM = Cast<AAmongUsGameMode>(GetWorld()->GetAuthGameMode()))
-                    // {
-                    //     GM->CheckWinCondition();
-                    // }
                 }
+                OnRep_AssignedTasks();
             }
             break; 
+        }
+    }
+}
+void AAmongUsPlayerState::OnRep_AssignedTasks()
+{
+    // On récupère notre pion (le personnage physique)
+    if (APawn* MyPawn = GetPawn())
+    {
+        if (AAmongUsCharacter* MyChar = Cast<AAmongUsCharacter>(MyPawn))
+        {
+            // On lui demande de mettre à jour ses lumières MAINTENANT
+            MyChar->UpdateTaskHighlights();
         }
     }
 }

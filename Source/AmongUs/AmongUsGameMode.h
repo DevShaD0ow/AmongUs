@@ -24,6 +24,7 @@ public:
 	void CheckAllPlayersReady();
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	void AssignAvailableColorToPlayer(APlayerController* NewPlayer);
 	void AssignRolesOnLevel();
 	void CheckLevelStart(); 
 	FTimerHandle StartCheckTimer;

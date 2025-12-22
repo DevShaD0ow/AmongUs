@@ -30,6 +30,7 @@ class AMONGUS_API AAmongUsCharacter : public ACharacter
 public:
     /** Constructor */
     AAmongUsCharacter();
+    void BeginPlay();
     virtual void OnRep_PlayerState() override;
 
     // Appelée sur le SERVEUR quand le Controller prend possession du Pion
@@ -45,22 +46,29 @@ public:
     
     UFUNCTION(BlueprintImplementableEvent, Category = "UI")
     void OnOpenColorPicker();
-
+    // Fonction de mise à jour visuelle
+    void UpdateTaskHighlights();
 protected:
     // ==========================
     // Components
     // ==========================
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rewind", meta = (AllowPrivateAccess = "true"))
-    TObjectPtr<URewindableComponent> RewindCapsule; // AJOUT
+    TObjectPtr<URewindableComponent> RewindCapsule;
 
     // Fonction appelée lors du "tir"
-    void Fire(); // AJOUT
+    void Fire(); 
 
     // 7. RPC du client vers le serveur
     UFUNCTION(Server, Reliable)
     void ServerConfirmHit(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState);
-    void ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState); // AJOUT
+    void ServerConfirmHit_Implementation(float ClientTimestamp, const FVector& StartLocation, const FRotator& Rotation, APlayerState* TargetPlayerState);
+
+
+    UPROPERTY()
+    TArray<class ABouton*> CachedButtons;
+
+    
     
     /** Camera boom positioning the camera behind the character */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))

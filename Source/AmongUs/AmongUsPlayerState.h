@@ -65,8 +65,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Role")
 	EPlayerRole GetPlayerRole() const;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Tasks")
+	UPROPERTY(ReplicatedUsing = OnRep_AssignedTasks, BlueprintReadOnly, Category = "Tasks")
 	TArray<FAmongUsTask> AssignedTasks;
+
+	// 2. Ajoutez cette fonction juste en dessous
+	UFUNCTION()
+	void OnRep_AssignedTasks();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ServerMarkTaskFinished(FName TaskID);

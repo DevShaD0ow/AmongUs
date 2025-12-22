@@ -47,6 +47,15 @@ void ABouton::IncrementTaskServerOnly_Implementation(AAmongUsPlayerState* Player
 	// Appel de la logique serveur
 	Interact(PlayerState);
 }
+void ABouton::SetHighlight(bool bActive)
+{
+	if (MeshComp)
+	{
+		MeshComp->SetRenderCustomDepth(bActive);
+		// On peut aussi changer une valeur de stencil si vous utilisez un shader complexe
+		MeshComp->SetCustomDepthStencilValue(bActive ? 250 : 0); 
+	}
+}
 
 void ABouton::Interact(AAmongUsPlayerState* PlayerState)
 {
