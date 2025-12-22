@@ -24,6 +24,7 @@ void AAmongUsGameMode::BeginPlay()
     if (World && World->GetMapName().EndsWith("Level"))
     {
         GetWorldTimerManager().SetTimer(StartCheckTimer, this, &AAmongUsGameMode::CheckLevelStart, 1.0f, true);
+        UE_LOG(LogTemp, Warning, TEXT("Level : En attente des joueurs via Seamless Travel..."));
     }
 }
 
@@ -157,6 +158,12 @@ void AAmongUsGameMode::AssignRolesOnLevel()
                 }
             }
             GS->nbTache += Players[i]->AssignedTasks.Num();
+
+            // === CORRECTION ICI ===
+            // On force la mise à jour visuelle pour le Serveur/Host
+            // (Car OnRep ne se déclenche pas automatiquement pour lui)
+            Players[i]->OnRep_AssignedTasks();
+            // ======================
         }
     }
 }
@@ -205,7 +212,7 @@ void AAmongUsGameMode::ChangeMap()
 
 void AAmongUsGameMode::ReturnToLobby()
 {
-    if (AAmongUsGameState* GS = GetGameState<AAmongUsGameState>())
+    if (AAmongUsGameState* GS = GetGameState<AAmongUsGameState>())\
     {
         for (APlayerState* PS : GS->PlayerArray)
         {

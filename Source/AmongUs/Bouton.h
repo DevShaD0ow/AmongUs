@@ -32,10 +32,11 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComp;
 
-
+	// La sphère "X-Ray" pour le contour visible à travers les murs
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UPointLightComponent* LightComp;
-	
+	UStaticMeshComponent* HighlightMesh;
+
+	// Fonction pour allumer/éteindre le contour
 	void SetHighlight(bool bActive);
 
 	// --- Interaction Logic ---

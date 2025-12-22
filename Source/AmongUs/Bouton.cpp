@@ -5,91 +5,85 @@
 #include "AmongUsGameState.h"
 #include "Engine/StaticMesh.h"
 #include "AmongUs.h"
-#include "Components/PointLightComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 ABouton::ABouton()
 {
-	bReplicates = true;       
-	bAlwaysRelevant = true;   
-	PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;       
+    bAlwaysRelevant = true;   
+    PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
-	SphereComp->SetupAttachment(RootComponent);
-	SphereComp->SetSphereRadius(200.f);
+    SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+    SphereComp->SetupAttachment(RootComponent);
+    SphereComp->SetSphereRadius(200.f);
 
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	MeshComp->SetupAttachment(RootComponent);
+    MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+    MeshComp->SetupAttachment(RootComponent);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
-	{
-		MeshComp->SetStaticMesh(CubeMesh.Object);
-		MeshComp->SetRelativeScale3D(FVector(0.3f)); 
-	}
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (CubeMesh.Succeeded())
+    {
+        MeshComp->SetStaticMesh(CubeMesh.Object);
+        MeshComp->SetRelativeScale3D(FVector(0.3f)); 
+    }
 
-	InteractionDistance = 200.f;
+    InteractionDistance = 200.f;
 
-	// CRÉATION DE LA LUMIÈRE
-	LightComp = CreateDefaultSubobject<UPointLightComponent>(TEXT("LightComp"));
-	LightComp->SetupAttachment(RootComponent);
+    // --- CONFIGURATION DU CONTOUR (SPHERE X-RAY) ---
+    HighlightMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HighlightMesh"));
+    HighlightMesh->SetupAttachment(RootComponent); 
     
-	LightComp->SetLightColor(FLinearColor(1.0f, 0.8f, 0.2f)); 
-	LightComp->SetIntensity(5000.0f); 
-	LightComp->SetAttenuationRadius(300.0f);
-	LightComp->SetVisibility(false);
+    // On utilise une sphère standard
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    if (SphereAsset.Succeeded())
+    {
+        HighlightMesh->SetStaticMesh(SphereAsset.Object);
+        // On la grossit pour qu'elle englobe le bouton (Scale 0.5 car la sphère de base est grosse)
+        HighlightMesh->SetRelativeScale3D(FVector(0.5f)); 
+    }
+
+    // Pas de collision physique, c'est juste visuel
+    HighlightMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    
+    // Caché par défaut
+    HighlightMesh->SetVisibility(false);
 }
 
 void ABouton::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
+    // IMPORTANT : N'oubliez pas d'assigner le Material "M_XRay" (Translucent, Disable Depth Test)
+    // sur le composant HighlightMesh dans l'éditeur Unreal (Blueprint BP_Bouton).
 }
 
 void ABouton::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 }
 
 void ABouton::IncrementTaskServerOnly_Implementation(AAmongUsPlayerState* PlayerState)
 {
-	Interact(PlayerState);
+    Interact(PlayerState);
 }
-
 
 void ABouton::SetHighlight(bool bActive)
 {
-	// Méthode 1 : La lumière (Facile et joli)
-	if (LightComp)
-	{
-		LightComp->SetVisibility(bActive);
-	}
-	if (MeshComp)
-	{
-		UMaterialInstanceDynamic* DynMat = Cast<UMaterialInstanceDynamic>(MeshComp->GetMaterial(0));
-		if (!DynMat)
-		{
-			DynMat = MeshComp->CreateDynamicMaterialInstance(0);
-		}
-
-		if (DynMat)
-		{
-			FLinearColor TargetColor = bActive ? FLinearColor::Green : FLinearColor::White;
-			DynMat->SetVectorParameterValue(FName("Color"), TargetColor);
-		}
-	}
+    // Méthode Simple : On affiche ou cache la sphère
+    if (HighlightMesh)
+    {
+        HighlightMesh->SetVisibility(bActive);
+    }
 }
 
 void ABouton::Interact(AAmongUsPlayerState* PlayerState)
 {
-	if (!PlayerState) return;
+    if (!PlayerState) return;
 
-	AAmongUsGameState* GS = Cast<AAmongUsGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (!GS) return;
-
-	if (GS->HasAuthority())
-	{
-		GS->ServerModifyNbtache(PlayerState);
-	}
+    AAmongUsGameState* GS = Cast<AAmongUsGameState>(UGameplayStatics::GetGameState(GetWorld()));
+    if (GS && GS->HasAuthority())
+    {
+        GS->ServerModifyNbtache(PlayerState);
+    }
 }
