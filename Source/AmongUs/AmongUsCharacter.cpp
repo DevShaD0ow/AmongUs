@@ -357,6 +357,15 @@ void AAmongUsCharacter::ServerConfirmHit_Implementation(float ClientTimestamp, c
 
 void AAmongUsCharacter::MulticastTriggerDeath_Implementation()
 {
+    if (IsLocallyControlled())
+    {
+        if (VictimMusicSound)UGameplayStatics::PlaySound2D(this, VictimMusicSound);
+    }
+    else
+    {
+        if (KillSlashSound) UGameplayStatics::PlaySoundAtLocation(this, KillSlashSound, GetActorLocation());
+        
+    }
     GetCharacterMovement()->StopMovementImmediately();
     GetCharacterMovement()->DisableMovement();
     GetCharacterMovement()->SetComponentTickEnabled(false);

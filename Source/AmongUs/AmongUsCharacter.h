@@ -75,7 +75,13 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
     float InteractionDistance = 200.f; 
-    
+
+    // --- Sound Effect ---
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+    USoundBase* KillSlashSound;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+    USoundBase* VictimMusicSound;
 protected:
     // --- Internal Input Callbacks ---
     void Move(const FInputActionValue& Value);

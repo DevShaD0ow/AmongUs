@@ -24,17 +24,12 @@ void AAmongUsPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	FString MapName = GetWorld()->GetMapName();
-    
-	// DEBUG FORCE
-	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, FString::Printf(TEXT("MAP ACTUELLE: %s"), *MapName));
-    
-	if (SessionMenuWidgetClass == nullptr) {
-		GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, TEXT("ERREUR: Le WIDGET n'est pas assigné dans le BP !"));
-	}
+	
+	if (SessionMenuWidgetClass == nullptr){}
+	
 
 	if (MapName.Contains("MainMenu"))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Green, TEXT("SUCCES: Map MainMenu détectée, affichage du menu..."));
 		ShowSessionMenu();
 		bShowMouseCursor = true;
 		SetInputMode(FInputModeUIOnly());
